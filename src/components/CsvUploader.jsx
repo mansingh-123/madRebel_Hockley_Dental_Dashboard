@@ -38,7 +38,7 @@ export default function CsvUploader({ onData }) {
         treatment_proposed: Number(r.treatment_proposed || 0),
         treatment_accepted: Number(r.treatment_accepted || 0)
       }))
-      onData(normalized)
+      onData(normalized, file)
     }
     reader.readAsText(file)
   }

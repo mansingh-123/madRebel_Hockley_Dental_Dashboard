@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react"
 import KpiCard from "./components/KpiCard.jsx"
+import ErrorState from "./components/ErrorState.jsx"
 import { fetchPtDashboard } from "./services/data.js"
 
 export default function PTDashboard({ locationId }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
   const [period, setPeriod] = useState("current")
   
   // Use dummy data if API returns nothing for now, or replace with API data
@@ -14,14 +16,34 @@ export default function PTDashboard({ locationId }) {
     if (!locationId) return
     let alive = true
     setLoading(true)
+    setError(false)
     fetchPtDashboard(locationId).then(res => {
       if (!alive) return
       if (res) setData(res)
+    }).catch(() => {
+      if (alive) setError(true)
     }).finally(() => {
       if (alive) setLoading(false)
     })
     return () => { alive = false }
   }, [locationId])
+
+  if (error) {
+    return (
+      <div className="page pt">
+        <div className="container">
+          <header className="header">
+            <div className="brand">Executive KPI Dashboard</div>
+          </header>
+          <ErrorState 
+            title="Oops! Something went wrong" 
+            message="We couldn't load your dashboard data. Please try refreshing the page."
+            icon="⚠️" 
+          />
+        </div>
+      </div>
+    )
+  }
   
   const months = ["Dec 12", "Dec 19", "Dec 26", "Jan 2", "Jan 9", "Jan 16"]
   const activePts = [360, 375, 382, 389, 396, 398]

@@ -237,3 +237,17 @@ body { margin: 0; font-family: Inter, system-ui, Arial; background: linear-gradi
   .actions-list li::before { width: 20px; height: 20px; line-height: 20px }
   .empty { padding: 24px; margin: 40px 0 }
 }
+
+.btn-upload { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600; padding: 6px 12px; transition: opacity 0.2s }
+.btn-upload:hover { opacity: 0.9 }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px }
+.modal-content { background: var(--panel); width: 100%; max-width: 480px; border-radius: 16px; padding: 24px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out }
+.modal-content h3 { margin: 0 0 8px; font-size: 18px }
+.modal-content p { color: var(--muted); margin: 0 0 20px; font-size: 14px }
+.upload-container { background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 12px; padding: 32px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 20px; transition: border-color 0.2s }
+.upload-container:hover { border-color: var(--accent) }
+.close-btn { width: 100%; padding: 10px; background: #f1f5f9; border: none; border-radius: 8px; color: var(--text); font-weight: 600; cursor: pointer }
+.close-btn:hover { background: #e2e8f0 }
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }

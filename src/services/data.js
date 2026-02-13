@@ -22,12 +22,21 @@ function normalizeRow(r) {
   }
 }
 
-export function buildApiUrl({ base, path, style, id }) {
+export function buildApiUrl({ base, path, style, id, year, month }) {
   const isDev = typeof import.meta !== "undefined" && import.meta.env && import.meta.env.DEV
   const root = isDev ? "" : (base || "")
-  if (!id) return root + path
-  if (style === "path") return `${root}${path}/id:${encodeURIComponent(id)}`
-  return `${root}${path}?id=${encodeURIComponent(id)}`
+  
+  // Use apiUrl helper to ensure full path in prod or dev proxy
+  const endpoint = isDev ? path : `https://kpi.medrebel.io${path}`
+  
+  if (!id) return endpoint
+  
+  const params = new URLSearchParams()
+  params.append("location_id", id)
+  if (year) params.append("year", year)
+  if (month) params.append("month", month)
+  
+  return `${endpoint}?${params.toString()}`
 }
 
 function apiUrl(p) {

@@ -1,12 +1,12 @@
 import React from "react"
 
-export default function ErrorState() {
+export default function ErrorState({ title = "ID Required", message = "This page needs an ID in the URL to load your dashboard.", icon = "!" }) {
   return (
     <div className="empty">
-      <div className="empty-icon">!</div>
-      <div className="empty-title">ID Required</div>
+      <div className="empty-icon">{icon}</div>
+      <div className="empty-title">{title}</div>
       <div className="empty-text">
-        This page needs an ID in the URL to load your dashboard.
+        {message}
       </div>
     </div>
   )

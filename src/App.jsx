@@ -6,7 +6,8 @@ import TrendTable from "./components/TrendTable.jsx"
 import ErrorState from "./components/ErrorState.jsx"
 import { computeKpis, sampleMonthlyData, monthsFromData } from "./utils/kpi.js"
 import { API_BASE, API_PATH, API_STYLE } from "./config.js"
-import { fetchMonthlyKpi, buildApiUrl, postLocationOnboard, generateAiInsights } from "./services/data.js"
+import { fetchMonthlyKpi, buildApiUrl, postLocationOnboard, generateAiInsights, fetchLocationDetails, uploadDentalCsv } from "./services/data.js"
+import CsvUploader from "./components/CsvUploader.jsx"
 
 function getIdFromUrl() {
   const params = new URLSearchParams(window.location.search)
@@ -25,11 +26,14 @@ export default function App({ locationId }) {
   const [kpis, setKpis] = useState(computeKpis(rows))
   const months = monthsFromData(rows)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
   const [aiInsights, setAiInsights] = useState([])
   const [aiActions, setAiActions] = useState([])
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear)
   const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1] || "Jan")
+  const [dataSource, setDataSource] = useState(null)
+  const [showUploadModal, setShowUploadModal] = useState(false)
 
   function onData(newRows) {
     setRows(newRows)
@@ -40,21 +44,44 @@ export default function App({ locationId }) {
   const [showOptimization, setShowOptimization] = React.useState(false)
 
   React.useEffect(() => {
-    if (!API_BASE) return
+    // if (!API_BASE) return
     let alive = true
     if (!locationId) { setLoading(false); return }
-    const url = buildApiUrl({ base: API_BASE, path: API_PATH, style: API_STYLE, id: locationId })
-    // If your backend supports year/month filtering, you'd append them here.
-    // For now we assume the endpoint returns monthly data which we filter on client or display.
-    // To match spec "Each change → re-call same API", you'd interpolate selectedYear/selectedMonth if API supported it.
+    
+    // Pass selected year/month to URL builder
+    const url = buildApiUrl({ 
+      base: API_BASE, 
+      path: API_PATH, 
+      style: API_STYLE, 
+      id: locationId,
+      year: selectedYear,
+      month: selectedMonth
+    })
     
     setLoading(true)
+    setError(false)
     fetchMonthlyKpi(url)
-      .then(r => { if (alive) onData((Array.isArray(r) && r.length) ? r : sampleMonthlyData) })
-      .catch(() => {})
+      .then(r => { 
+        if (alive) onData((Array.isArray(r) && r.length) ? r : sampleMonthlyData) 
+      })
+      .catch(() => {
+        if (alive) setError(true)
+      })
       .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
   }, [locationId, selectedYear, selectedMonth])
+
+  React.useEffect(() => {
+    let alive = true
+    if (!locationId) return
+    fetchLocationDetails(locationId).then(res => {
+      if (!alive) return
+      if (res && res.data_source) {
+        setDataSource(res.data_source)
+      }
+    }).catch(() => {})
+    return () => { alive = false }
+  }, [locationId])
 
   React.useEffect(() => {
     let alive = true
@@ -69,6 +96,23 @@ export default function App({ locationId }) {
       .catch(() => {})
     return () => { alive = false }
   }, [locationId])
+
+  if (error) {
+    return (
+      <div className="page dental">
+        <div className="container">
+          <header className="header">
+            <div className="brand">Hockley Dental KPI Dashboard</div>
+          </header>
+          <ErrorState 
+            title="Oops! Something went wrong" 
+            message="We couldn't load your dashboard data. Please try refreshing the page."
+            icon="⚠️" 
+          />
+        </div>
+      </div>
+    )
+  }
 
   function pctLocal(numerator, denominator) {
     const n = Number(numerator || 0)
@@ -166,6 +210,11 @@ export default function App({ locationId }) {
         <header className="header">
           <div className="brand">Hockley Dental KPI Dashboard</div>
           <div className="controls">
+            {dataSource === "CSV" && (
+              <button className="badge btn-upload" onClick={() => setShowUploadModal(true)}>
+                Upload CSV
+              </button>
+            )}
             <span><span className="status-dot"></span>{loading ? "Loading…" : "Live API"}</span>
             <span className="badge">ID: {locationId || "—"}</span>
             <span>
