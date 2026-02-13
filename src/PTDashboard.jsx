@@ -78,14 +78,6 @@ export default function PTDashboard({ locationId }) {
           <div className="brand">Executive KPI Dashboard</div>
           <div className="controls">
             <span><span className="status-dot"></span>{loading ? "Loading..." : "Live Data"}</span>
-            <span className="badge">{weekOfLabel()}</span>
-            <span>
-              <select className="badge" value={period} onChange={e => setPeriod(e.target.value)}>
-                <option value="current">Current week</option>
-                <option value="last">Last week</option>
-                <option value="6w">Last 6 weeks</option>
-              </select>
-            </span>
           </div>
         </header>
 
