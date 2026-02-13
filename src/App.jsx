@@ -31,13 +31,26 @@ export default function App({ locationId }) {
   const [aiActions, setAiActions] = useState([])
   const currentYear = new Date().getFullYear()
   const [selectedYear, setSelectedYear] = useState(currentYear)
-  const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1] || "Jan")
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('en-US', { month: 'short' }))
   const [dataSource, setDataSource] = useState(null)
   const [showUploadModal, setShowUploadModal] = useState(false)
 
   function onData(newRows) {
     setRows(newRows)
     setKpis(computeKpis(newRows))
+  }
+
+  const handleCsvUpload = async (newRows, file) => {
+    onData(newRows)
+    setShowUploadModal(false)
+    if (file && locationId) {
+      if (!(file instanceof File)) {
+        console.error("Invalid file object")
+        return
+      }
+      await uploadDentalCsv(locationId, file)
+      // Optionally show success notification
+    }
   }
 
   const [showLeakage, setShowLeakage] = React.useState(false)
