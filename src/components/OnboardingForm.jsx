@@ -67,6 +67,8 @@ export default function OnboardingForm({ locationId, onSubmit, onComplete }) {
   const showSheetId = isPt && source === "Sheet"
   const showApiSoon = source === "API"
   
+  const isValid = loc.trim() && dashboard && source && (!showSheetId || sheetId.trim())
+  
   if (ingestionMode) {
     if (isPt) {
       return (
@@ -238,7 +240,7 @@ export default function OnboardingForm({ locationId, onSubmit, onComplete }) {
         </div>
         {error && <div className="form-error">{error}</div>}
         <div className="form-actions">
-          <button type="submit" className="upload">
+          <button type="submit" className="upload" disabled={!isValid} style={{opacity: isValid ? 1 : 0.5, cursor: isValid ? 'pointer' : 'not-allowed'}}>
             <span>Submit</span>
           </button>
         </div>

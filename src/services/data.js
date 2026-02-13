@@ -39,7 +39,7 @@ function apiUrl(p) {
 export async function fetchLocationDetails(locationId) {
   try {
     const url = apiUrl(`/reports/location-details/?location_id=${encodeURIComponent(locationId)}`)
-    const res = await fetch(url, { mode: "no-cors" })
+    const res = await fetch(url)
     if (!res.ok) throw new Error("Failed to fetch location details")
     const json = await res.json()
     return json
