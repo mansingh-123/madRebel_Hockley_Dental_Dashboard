@@ -1,46 +1,121 @@
 import React, { useState } from "react"
-import CsvUploader from "./components/CsvUploader.jsx"
+import OnboardingForm from "./components/OnboardingForm.jsx"
 import KpiCard from "./components/KpiCard.jsx"
 import ChartCard from "./components/ChartCard.jsx"
 import TrendTable from "./components/TrendTable.jsx"
 import ErrorState from "./components/ErrorState.jsx"
 import { computeKpis, sampleMonthlyData, monthsFromData } from "./utils/kpi.js"
 import { API_BASE, API_PATH, API_STYLE } from "./config.js"
-import { fetchMonthlyKpi, buildApiUrl } from "./services/data.js"
+import { fetchMonthlyKpi, buildApiUrl, postLocationOnboard, generateAiInsights } from "./services/data.js"
 
 function getIdFromUrl() {
-  const { pathname } = window.location
-  const m = pathname.match(/^\/id:([A-Za-z0-9_-]+)$/)
-  return m ? m[1] : ""
+  const params = new URLSearchParams(window.location.search)
+  const id = params.get("locationId")
+  return id ? String(id) : ""
 }
 
-export default function App() {
+function getOnboardedFromUrl() {
+  const params = new URLSearchParams(window.location.search)
+  const v = (params.get("onboarded") || "").toLowerCase()
+  return v === "yes" || v === "true" || v === "1"
+}
+
+export default function App({ locationId }) {
   const [rows, setRows] = useState(sampleMonthlyData)
   const [kpis, setKpis] = useState(computeKpis(rows))
   const months = monthsFromData(rows)
   const [loading, setLoading] = useState(false)
-  const [entityId, setEntityId] = useState(getIdFromUrl())
+  const [aiInsights, setAiInsights] = useState([])
+  const [aiActions, setAiActions] = useState([])
+  const currentYear = new Date().getFullYear()
+  const [selectedYear, setSelectedYear] = useState(currentYear)
+  const [selectedMonth, setSelectedMonth] = useState(months[months.length - 1] || "Jan")
 
   function onData(newRows) {
     setRows(newRows)
     setKpis(computeKpis(newRows))
   }
 
+  const [showLeakage, setShowLeakage] = React.useState(false)
+  const [showOptimization, setShowOptimization] = React.useState(false)
+
   React.useEffect(() => {
     if (!API_BASE) return
     let alive = true
-    const id = getIdFromUrl()
-    setEntityId(id)
-    if (!id) { setLoading(false); return }
-    const url = buildApiUrl({ base: API_BASE, path: API_PATH, style: API_STYLE, id })
+    if (!locationId) { setLoading(false); return }
+    const url = buildApiUrl({ base: API_BASE, path: API_PATH, style: API_STYLE, id: locationId })
+    // If your backend supports year/month filtering, you'd append them here.
+    // For now we assume the endpoint returns monthly data which we filter on client or display.
+    // To match spec "Each change → re-call same API", you'd interpolate selectedYear/selectedMonth if API supported it.
+    
     setLoading(true)
     fetchMonthlyKpi(url)
       .then(r => { if (alive) onData((Array.isArray(r) && r.length) ? r : sampleMonthlyData) })
       .catch(() => {})
       .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
-  }, [])
+  }, [locationId, selectedYear, selectedMonth])
 
+  React.useEffect(() => {
+    let alive = true
+    if (!locationId) return
+    generateAiInsights(locationId)
+      .then(res => {
+        if (!alive || !res || !res.ai_response) return
+        const ai = res.ai_response || {}
+        if (Array.isArray(ai.insights)) setAiInsights(ai.insights)
+        if (Array.isArray(ai.action_items)) setAiActions(ai.action_items)
+      })
+      .catch(() => {})
+    return () => { alive = false }
+  }, [locationId])
+
+  function pctLocal(numerator, denominator) {
+    const n = Number(numerator || 0)
+    const d = Number(denominator || 0)
+    if (!d || d <= 0) return 0
+    return Math.round((n / d) * 100)
+  }
+  function latestFromRow(r) {
+    const latest = r || {}
+    const latestCollectionRatio = pctLocal((latest.collections_general || 0) + (latest.collections_ortho || 0), (latest.production_general || 0) + (latest.production_ortho || 0))
+    const latestCancellationRate = pctLocal(latest.cancelled_appointments || 0, latest.scheduled_appointments || 0)
+    const latestNoShowRate = pctLocal(latest.no_show_appointments || 0, latest.scheduled_appointments || 0)
+    const latestFillRate = (() => {
+      const scheduled = latest.scheduled_appointments || 0
+      const cancelled = latest.cancelled_appointments || 0
+      const noShow = latest.no_show_appointments || 0
+      const filled = scheduled - cancelled - noShow
+      return pctLocal(filled, scheduled)
+    })()
+    const latestNetGrowth = (latest.new_patients || 0) - (latest.lost_patients || 0)
+    const latestTreatmentAcc = pctLocal(latest.treatment_accepted || 0, latest.treatment_proposed || 0)
+    return {
+      activePatients: latest.active_patients || 0,
+      newPatients: latest.new_patients || 0,
+      newPatientGoal: 200,
+      lostPatients: latest.lost_patients || 0,
+      netPatientGrowth: latestNetGrowth,
+      productionGeneral: latest.production_general || 0,
+      productionOrtho: latest.production_ortho || 0,
+      productionTotal: (latest.production_general || 0) + (latest.production_ortho || 0),
+      collectionsGeneral: latest.collections_general || 0,
+      collectionsOrtho: latest.collections_ortho || 0,
+      collectionsTotal: (latest.collections_general || 0) + (latest.collections_ortho || 0),
+      collectionRatioPct: latestCollectionRatio,
+      cancellationRatePct: latestCancellationRate,
+      noShowRatePct: latestNoShowRate,
+      fillRatePct: latestFillRate,
+      lostProduction: latest.lost_production || 0,
+      lostCancelled: latest.lost_cancelled || 0,
+      lostNoShow: latest.lost_noshow || 0,
+      scheduledAppointments: latest.scheduled_appointments || 0,
+      noShowAppointments: latest.no_show_appointments || 0,
+      treatmentAcceptancePct: latestTreatmentAcc
+    }
+  }
+  const selectedIndex = months.findIndex(m => m === selectedMonth)
+  const latestView = latestFromRow((selectedIndex > -1 ? rows[selectedIndex] : rows[rows.length - 1]) || {})
   function weekOfLabel() {
     const d = new Date()
     const day = d.getDay()
@@ -50,12 +125,20 @@ export default function App() {
     return `Week of ${months[monday.getMonth()]} ${String(monday.getDate()).padStart(2,"0")}, ${monday.getFullYear()}`
   }
 
+  function pctTrend(arr) {
+    if (!Array.isArray(arr) || arr.length < 2) return 0
+    const first = Number(arr[0] || 0)
+    const last = Number(arr[arr.length - 1] || 0)
+    if (!first) return 0
+    return ((last - first) / first) * 100
+  }
+
   const mockInsights = [
     "New patients trending down vs prior month — monitor recovery closely.",
-    `Net growth positive (+${Number(kpis.latest.netPatientGrowth || 0)}) but softening — review retention drivers.`,
-    `Collection ratio at ${Number(kpis.latest.collectionRatioPct || 0)}% — AR appears healthy.`,
+    `Net growth positive (+${Number(latestView.netPatientGrowth || 0)}) but softening — review retention drivers.`,
+    `Collection ratio at ${Number(latestView.collectionRatioPct || 0)}% — AR appears healthy.`,
     "ORTHO holding near 30% of total production — steady.",
-    `$${Number(kpis.latest.lostProduction || 0).toLocaleString()} lost to cancellations/no-shows — material impact.`
+    `$${Number(latestView.lostProduction || 0).toLocaleString()} lost to cancellations/no-shows — material impact.`
   ]
   const mockActions = [
     "Launch reactivation campaign — target recent inactives.",
@@ -73,53 +156,98 @@ export default function App() {
     return [text, ""]
   }
 
-  if (!entityId) {
-    return (
-      <div className="page">
-        <header className="header">
-          <div className="brand">Hockley Dental KPI Dashboard</div>
-        </header>
-        <ErrorState />
-      </div>
-    )
+  if (locationId && !rows) {
+    // Should not happen if rows initialized to sample or fetched
   }
+
   return (
-    <div className="page">
+    <div className="page dental">
       <div className="container">
         <header className="header">
           <div className="brand">Hockley Dental KPI Dashboard</div>
           <div className="controls">
-            {!API_BASE && <CsvUploader onData={onData} />}
-            {API_BASE && (
-              <>
-                <span className="kpi-title">{loading ? "Loading…" : "Live API"}</span>
-                <span className="badge">ID: {entityId || "—"}</span>
-              </>
-            )}
+            <span><span className="status-dot"></span>{loading ? "Loading…" : "Live API"}</span>
+            <span className="badge">ID: {locationId || "—"}</span>
+            <span>
+              <select className="badge" value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))}>
+                <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
+                <option value={new Date().getFullYear() - 1}>{new Date().getFullYear() - 1}</option>
+              </select>
+            </span>
+            <span>
+              <select className="badge" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}>
+                {months.map((m, i) => (<option key={i} value={m}>{m}</option>))}
+              </select>
+            </span>
           </div>
         </header>
 
-      <section className="summary">
-        <KpiCard title="Active Patients" value={Number(kpis.latest.activePatients || 0)} />
-        <KpiCard title="New Patients" value={Number(kpis.latest.newPatients || 0)} />
-        <KpiCard title="New Patient Goal" value={Number(kpis.latest.newPatientGoal || 0)} subtitle="Monthly target" />
-        <KpiCard title="Lost Patients" value={Number(kpis.latest.lostPatients || 0)} />
-        <KpiCard title="Net Patient Growth" value={Number(kpis.latest.netPatientGrowth || 0)} />
+      <div className="tiers-bar">
+        <span className="tier-pill t1"><span className="dot"></span>Executive Snapshot</span>
+        <span className="tier-pill t2"><span className="dot"></span>Growth & Revenue Drivers</span>
+        <span className="tier-pill t3"><span className="dot"></span>Operational Leakage</span>
+        <span className="tier-pill t4"><span className="dot"></span>Efficiency & Optimization</span>
+      </div>
 
-        <KpiCard title="Production — General" value={'$' + Number(kpis.latest.productionGeneral || 0).toLocaleString()} />
-        <KpiCard title="Production — ORTHO" value={'$' + Number(kpis.latest.productionOrtho || 0).toLocaleString()} />
-        <KpiCard title="Collections — General" value={'$' + Number(kpis.latest.collectionsGeneral || 0).toLocaleString()} />
-        <KpiCard title="Collections — ORTHO" value={'$' + Number(kpis.latest.collectionsOrtho || 0).toLocaleString()} />
-        <KpiCard title="Collection Ratio" value={Number(kpis.latest.collectionRatioPct || 0) + '%'} subtitle="Collections ÷ Production" />
-
-        <KpiCard title="Lost Production $" value={'$' + Number(kpis.latest.lostProduction || 0).toLocaleString()} subtitle="Cancelled + No-show" />
-        <KpiCard title="Cancelled $" value={'$' + Number(kpis.latest.lostCancelled || 0).toLocaleString()} subtitle="From cancellations" />
-        <KpiCard title="No-Show $" value={'$' + Number(kpis.latest.lostNoShow || 0).toLocaleString()} subtitle="From no-shows" />
-
-        <KpiCard title="Cancellation Rate" value={`${Number(kpis.latest.cancellationRatePct || 0)}%`} subtitle={`${Number(kpis.latest.cancelledAppointments || 0)} of ${Number(kpis.latest.scheduledAppointments || 0)} appts`} />
-        <KpiCard title="No-Show Rate" value={`${Number(kpis.latest.noShowRatePct || 0)}%`} subtitle={`${Number(kpis.latest.noShowAppointments || 0)} of ${Number(kpis.latest.scheduledAppointments || 0)} appts`} />
-        <KpiCard title="Fill Rate" value={Number(kpis.latest.fillRatePct || 0) + '%'} subtitle="Chairs utilized" />
-        <KpiCard title="Treatment Acceptance" value={Number(kpis.latest.treatmentAcceptancePct || 0) + '%'} />
+      <section className="panel tier-section">
+        <div className="panel-title">Executive Snapshot</div>
+        <div className="summary summary-top">
+        <KpiCard
+          variant="metric"
+          title="Active Patients"
+          value={Number(latestView.activePatients || 0)}
+          subtitle="Total active patients • All locations · Current period"
+          sparkline={kpis.series.activePatients}
+          lineColor="#22c55e"
+          sparklineLabels={[months[0], months[months.length - 1]]}
+          trendPct={pctTrend(kpis.series.activePatients)}
+          trendLabel="vs start of period"
+        />
+        <KpiCard
+          variant="metric"
+          title="Net Patient Growth"
+          value={Number(latestView.netPatientGrowth || 0)}
+          subtitle="New patients − lost patients • Last month"
+          sparkline={kpis.series.netPatientGrowth}
+          lineColor="#22c55e"
+          sparklineLabels={[months[0], months[months.length - 1]]}
+          trendPct={pctTrend(kpis.series.netPatientGrowth)}
+          trendLabel="vs start of period"
+        />
+        <KpiCard
+          variant="metric"
+          title="Production — Total"
+          value={'$' + Number(latestView.productionTotal || 0).toLocaleString()}
+          subtitle="Total production (General + Ortho) • Current month"
+          sparkline={kpis.series.productionTotal}
+          lineColor="#3b82f6"
+          sparklineLabels={[months[0], months[months.length - 1]]}
+          trendPct={pctTrend(kpis.series.productionTotal)}
+          trendLabel="vs start of period"
+        />
+        <KpiCard
+          variant="metric"
+          title="Collections — Total"
+          value={'$' + Number(latestView.collectionsTotal || 0).toLocaleString()}
+          subtitle="Total collections (General + Ortho) • Current month"
+          sparkline={kpis.series.collectionsTotal}
+          lineColor="#22c55e"
+          sparklineLabels={[months[0], months[months.length - 1]]}
+          trendPct={pctTrend(kpis.series.collectionsTotal)}
+          trendLabel="vs start of period"
+        />
+        <KpiCard
+          variant="metric"
+          title="Collection Ratio"
+          value={Number(latestView.collectionRatioPct || 0) + '%'}
+          subtitle="Collections ÷ Production • Target: 95%+"
+          sparkline={kpis.series.collectionRatioPct}
+          lineColor="#a855f7"
+          sparklineLabels={[months[0], months[months.length - 1]]}
+          trendPct={pctTrend(kpis.series.collectionRatioPct)}
+          trendLabel="vs start of period"
+        />
+        </div>
       </section>
 
       <section className="grid">
@@ -127,8 +255,8 @@ export default function App() {
           title="Production"
           months={months}
           datasets={[
-            { label: "General", data: kpis.series.productionGeneral, color: "#2563eb" },
-            { label: "ORTHO", data: kpis.series.productionOrtho, color: "#ef4444" }
+            { label: "General", data: kpis.series.productionGeneral, color: "#3b82f6" },
+            { label: "ORTHO", data: kpis.series.productionOrtho, color: "#a855f7" }
           ]}
           type="bar"
         />
@@ -136,7 +264,7 @@ export default function App() {
           title="Collections"
           months={months}
           datasets={[
-            { label: "General", data: kpis.series.collectionsGeneral, color: "#16a34a" },
+            { label: "General", data: kpis.series.collectionsGeneral, color: "#22c55e" },
             { label: "ORTHO", data: kpis.series.collectionsOrtho, color: "#f59e0b" }
           ]}
           type="bar"
@@ -145,8 +273,8 @@ export default function App() {
           title="New Patients vs Goal"
           months={months}
           datasets={[
-            { label: "New Patients", data: kpis.series.newPatients, color: "#22c55e" },
-            { label: "Goal", data: kpis.series.newPatientGoal, color: "#a3a3a3" }
+            { label: "New Patients", data: kpis.series.newPatients, color: "#3b82f6" },
+            { label: "Goal", data: kpis.series.newPatientGoal, color: "#cbd5e1" }
           ]}
           type="line"
         />
@@ -154,15 +282,115 @@ export default function App() {
           title="Collection Ratio"
           months={months}
           datasets={[
-            { label: "Ratio %", data: kpis.series.collectionRatioPct, color: "#9333ea" }
+            { label: "Ratio %", data: kpis.series.collectionRatioPct, color: "#a855f7" }
           ]}
           type="line"
         />
+      </section>
+
+      <section className="panel tier-section">
+        <div className="panel-title">Growth & Revenue Drivers</div>
+        <div className="summary">
+        <KpiCard variant="kpi" title="New Patients" value={Number(latestView.newPatients || 0)} subtitle="Last month" />
+        <KpiCard variant="kpi" title="New Patient Goal" value={Number(latestView.newPatientGoal || 0)} subtitle="Monthly target" />
+        <KpiCard variant="kpi" title="Lost Patients" value={Number(latestView.lostPatients || 0)} subtitle="Last month" />
+        <KpiCard
+          variant="kpi"
+          title="Production — General"
+          value={'$' + Number(latestView.productionGeneral || 0).toLocaleString()}
+          subtitle="General production • Current month"
+        />
+        <KpiCard
+          variant="kpi"
+          title="Production — ORTHO"
+          value={'$' + Number(latestView.productionOrtho || 0).toLocaleString()}
+          subtitle="Ortho production • Current month"
+        />
+        <KpiCard
+          variant="kpi"
+          title="Collections — General"
+          value={'$' + Number(latestView.collectionsGeneral || 0).toLocaleString()}
+          subtitle="General collections • Current month"
+        />
+        <KpiCard
+          variant="kpi"
+          title="Collections — ORTHO"
+          value={'$' + Number(latestView.collectionsOrtho || 0).toLocaleString()}
+          subtitle="Ortho collections • Current month"
+        />
+        </div>
+      </section>
+
+      <section className="compact-panel tier-section">
+        <div className="compact-head">
+          <div className="compact-title">Operational Leakage</div>
+          <div className="toggle" onClick={() => setShowLeakage(!showLeakage)}>{showLeakage ? "Hide details" : "Show details"}</div>
+        </div>
+        {showLeakage ? (
+          <div className="summary">
+            <KpiCard variant="kpi" title="Lost Production $" value={'$' + Number(latestView.lostProduction || 0).toLocaleString()} subtitle="Last month" />
+            <KpiCard variant="kpi" title="Cancelled + No-Show" value={Number((latestView.cancelledAppointments || 0) + (latestView.noShowAppointments || 0))} subtitle="Total missed appts • Last month" />
+            <KpiCard variant="kpi" title="Cancelled $" value={'$' + Number(latestView.lostCancelled || 0).toLocaleString()} subtitle="Last month" />
+            <KpiCard variant="kpi" title="No-Show $" value={'$' + Number(latestView.lostNoShow || 0).toLocaleString()} subtitle="Last month" />
+            <KpiCard variant="kpi" title="Cancellation Rate" value={`${Number(latestView.cancellationRatePct || 0)}%`} subtitle={`${Number(latestView.cancelledAppointments || 0)} of ${Number(latestView.scheduledAppointments || 0)} appts`} />
+            <KpiCard variant="kpi" title="No-Show Rate" value={`${Number(latestView.noShowRatePct || 0)}%`} subtitle={`${Number(latestView.noShowAppointments || 0)} of ${Number(latestView.scheduledAppointments || 0)} appts`} />
+            <KpiCard variant="kpi" title="Fill Rate" value={Number(latestView.fillRatePct || 0) + '%'} subtitle="Chairs utilized" />
+          </div>
+        ) : (
+          <div className="compact-grid">
+            <div className="chip">
+              <div className="chip-title">Lost Production $</div>
+              <div className="chip-value">{'$' + Number(latestView.lostProduction || 0).toLocaleString()}</div>
+            </div>
+            <div className="chip">
+              <div className="chip-title">Cancelled + No-Show</div>
+              <div className="chip-value">{Number((latestView.cancelledAppointments || 0) + (latestView.noShowAppointments || 0))}</div>
+            </div>
+            <div className="chip">
+              <div className="chip-title">Cancellation Rate</div>
+              <div className="chip-value">{Number(latestView.cancellationRatePct || 0) + '%'}</div>
+            </div>
+            <div className="chip">
+              <div className="chip-title">No-Show Rate</div>
+              <div className="chip-value">{Number(latestView.noShowRatePct || 0) + '%'}</div>
+            </div>
+            <div className="chip">
+              <div className="chip-title">Cancelled $</div>
+              <div className="chip-value">{'$' + Number(latestView.lostCancelled || 0).toLocaleString()}</div>
+            </div>
+            <div className="chip">
+              <div className="chip-title">No-Show $</div>
+              <div className="chip-value">{'$' + Number(latestView.lostNoShow || 0).toLocaleString()}</div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="compact-panel tier-section">
+        <div className="compact-head">
+          <div className="compact-title">Efficiency & Optimization</div>
+          <div className="toggle" onClick={() => setShowOptimization(!showOptimization)}>{showOptimization ? "Hide details" : "Show details"}</div>
+        </div>
+        {showOptimization ? (
+          <div className="summary">
+            <KpiCard variant="kpi" title="Treatment Acceptance" value={Number(latestView.treatmentAcceptancePct || 0) + '%'} subtitle="Last month" />
+          </div>
+        ) : (
+          <div className="compact-grid">
+            <div className="chip">
+              <div className="chip-title">Treatment Acceptance</div>
+              <div className="chip-value">{Number(latestView.treatmentAcceptancePct || 0) + '%'}</div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <section className="grid">
         <ChartCard
           title="Cancellation Rate"
           months={months}
           datasets={[
-            { label: "Cancelled %", data: kpis.series.cancellationRatePct, color: "#e11d48" }
+            { label: "Cancelled %", data: kpis.series.cancellationRatePct, color: "#f59e0b" }
           ]}
           type="line"
         />
@@ -170,7 +398,7 @@ export default function App() {
           title="No-Show Rate"
           months={months}
           datasets={[
-            { label: "No-Show %", data: kpis.series.noShowRatePct, color: "#0ea5e9" }
+            { label: "No-Show %", data: kpis.series.noShowRatePct, color: "#3b82f6" }
           ]}
           type="line"
         />
@@ -179,7 +407,7 @@ export default function App() {
           months={months}
           datasets={[
             { label: "Net", data: kpis.series.netPatientGrowth, color: "#22c55e" },
-            { label: "Goal", data: kpis.series.newPatientGoal, color: "#a3a3a3" }
+            { label: "Goal", data: kpis.series.newPatientGoal, color: "#cbd5e1" }
           ]}
           type="line"
         />
@@ -195,7 +423,7 @@ export default function App() {
           title="Fill Rate"
           months={months}
           datasets={[
-            { label: "Fill Rate %", data: kpis.series.fillRatePct, color: "#10b981" }
+            { label: "Fill Rate %", data: kpis.series.fillRatePct, color: "#22c55e" }
           ]}
           type="line"
         />
@@ -209,7 +437,7 @@ export default function App() {
         <div className="panel panel-insights">
           <div className="panel-title">AI Insights — <span className="badge">Week of {weekOfLabel().split('Week of ')[1]}</span></div>
           <ul className="insights-list">
-            {((kpis.latest.aiInsights && kpis.latest.aiInsights.length) ? kpis.latest.aiInsights : mockInsights).map((x, i) => {
+            {(aiInsights.length ? aiInsights : ((kpis.latest.aiInsights && kpis.latest.aiInsights.length) ? kpis.latest.aiInsights : mockInsights)).map((x, i) => {
               const [lead, rest] = splitLead(x)
               return (
                 <li key={i}>
@@ -223,7 +451,7 @@ export default function App() {
         <div className="panel panel-actions">
           <div className="panel-title">Action Items — <span className="badge success">This Week</span></div>
           <ul className="actions-list">
-            {((kpis.latest.actionItems && kpis.latest.actionItems.length) ? kpis.latest.actionItems : mockActions).map((x, i) => {
+            {(aiActions.length ? aiActions : ((kpis.latest.actionItems && kpis.latest.actionItems.length) ? kpis.latest.actionItems : mockActions)).map((x, i) => {
               const [lead, rest] = splitLead(x)
               return (
                 <li key={i}>

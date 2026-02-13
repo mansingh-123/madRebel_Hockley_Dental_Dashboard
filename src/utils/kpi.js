@@ -13,11 +13,15 @@ export function monthsFromData(rows) {
 
 export function computeKpis(rows) {
   const series = {
+    activePatients: rows.map(r => r.active_patients || 0),
     productionGeneral: rows.map(r => r.production_general || 0),
     productionOrtho: rows.map(r => r.production_ortho || 0),
+    productionTotal: rows.map(r => (r.production_general || 0) + (r.production_ortho || 0)),
     collectionsGeneral: rows.map(r => r.collections_general || 0),
     collectionsOrtho: rows.map(r => r.collections_ortho || 0),
+    collectionsTotal: rows.map(r => (r.collections_general || 0) + (r.collections_ortho || 0)),
     newPatients: rows.map(r => r.new_patients || 0),
+    lostPatients: rows.map(r => r.lost_patients || 0),
     collectionRatioPct: rows.map(r => pct((r.collections_general || 0) + (r.collections_ortho || 0), (r.production_general || 0) + (r.production_ortho || 0))),
     cancellationRatePct: rows.map(r => pct(r.cancelled_appointments || 0, r.scheduled_appointments || 0)),
     noShowRatePct: rows.map(r => pct(r.no_show_appointments || 0, r.scheduled_appointments || 0)),
@@ -30,7 +34,13 @@ export function computeKpis(rows) {
     }),
     netPatientGrowth: rows.map(r => (r.new_patients || 0) - (r.lost_patients || 0)),
     newPatientGoal: rows.map(() => goalNewPatientsPerMonth),
-    treatmentAcceptancePct: rows.map(r => pct(r.treatment_accepted || 0, r.treatment_proposed || 0))
+    treatmentAcceptancePct: rows.map(r => pct(r.treatment_accepted || 0, r.treatment_proposed || 0)),
+    lostProduction: rows.map(r => r.lost_production || 0),
+    lostCancelled: rows.map(r => r.lost_cancelled || 0),
+    lostNoShow: rows.map(r => r.lost_noshow || 0),
+    cancelledAppointments: rows.map(r => r.cancelled_appointments || 0),
+    noShowAppointments: rows.map(r => r.no_show_appointments || 0),
+    missedAppointments: rows.map(r => (r.cancelled_appointments || 0) + (r.no_show_appointments || 0))
   }
 
   const latest = rows[rows.length - 1] || {}
@@ -55,8 +65,10 @@ export function computeKpis(rows) {
     netPatientGrowth: latestNetGrowth,
     productionGeneral: latest.production_general || 0,
     productionOrtho: latest.production_ortho || 0,
+    productionTotal: (latest.production_general || 0) + (latest.production_ortho || 0),
     collectionsGeneral: latest.collections_general || 0,
     collectionsOrtho: latest.collections_ortho || 0,
+    collectionsTotal: (latest.collections_general || 0) + (latest.collections_ortho || 0),
     collectionRatioPct: latestCollectionRatio,
     cancellationRatePct: latestCancellationRate,
     noShowRatePct: latestNoShowRate,
