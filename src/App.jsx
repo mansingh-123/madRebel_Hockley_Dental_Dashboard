@@ -46,10 +46,15 @@ export default function App({ locationId }) {
     if (file && locationId) {
       if (!(file instanceof File)) {
         console.error("Invalid file object")
+        alert("Error: Invalid file object. Please try again.")
         return
       }
-      await uploadDentalCsv(locationId, file)
-      // Optionally show success notification
+      const res = await uploadDentalCsv(locationId, file)
+      if (res && res.status === "error") {
+        alert("Upload failed: " + res.message)
+      } else {
+        alert("CSV uploaded successfully!")
+      }
     }
   }
 

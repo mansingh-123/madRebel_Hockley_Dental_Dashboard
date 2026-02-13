@@ -238,7 +238,7 @@ body { margin: 0; font-family: Inter, system-ui, Arial; background: linear-gradi
   .empty { padding: 24px; margin: 40px 0 }
 }
 
-.btn-upload { background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600; padding: 6px 12px; transition: opacity 0.2s }
+.btn-upload { background: var(--accent) !important; color: white !important; border: none !important; cursor: pointer; font-weight: 600; padding: 6px 12px; transition: opacity 0.2s }
 .btn-upload:hover { opacity: 0.9 }
 
 .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px }
