@@ -119,9 +119,6 @@ export default function App({ locationId }) {
     return (
       <div className="page dental">
         <div className="container">
-          <header className="header">
-            <div className="brand">Hockley Dental KPI Dashboard</div>
-          </header>
           <ErrorState 
             title="Oops! Something went wrong" 
             message="We couldn't load your dashboard data. Please try refreshing the page."
@@ -226,7 +223,7 @@ export default function App({ locationId }) {
     <div className="page dental">
       <div className="container">
         <header className="header">
-          <div className="brand">Hockley Dental KPI Dashboard</div>
+          <div className="brand">DENTAL Dashboard</div>
           <div className="controls">
             {dataSource === "CSV" && (
               <button className="badge btn-upload" onClick={() => setShowUploadModal(true)}>

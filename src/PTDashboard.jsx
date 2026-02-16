@@ -32,9 +32,6 @@ export default function PTDashboard({ locationId }) {
     return (
       <div className="page pt">
         <div className="container">
-          <header className="header">
-            <div className="brand">Executive KPI Dashboard</div>
-          </header>
           <ErrorState 
             title="Oops! Something went wrong" 
             message="We couldn't load your dashboard data. Please try refreshing the page."
@@ -75,7 +72,7 @@ export default function PTDashboard({ locationId }) {
     <div className="page pt">
       <div className="container">
         <header className="header">
-          <div className="brand">Executive KPI Dashboard</div>
+          <div className="brand">PT Dashboard</div>
           <div className="controls">
             <span><span className="status-dot"></span>{loading ? "Loading..." : "Live Data"}</span>
           </div>
