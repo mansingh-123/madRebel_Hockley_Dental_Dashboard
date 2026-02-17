@@ -1,0 +1,439 @@
+Response of the api https://kpi.medrebel.io/reports/pt/data/by-loc/?location_id=LOC_222
+
+
+{
+    "template": "PT",
+    "status": "success",
+    "data": {
+        "weekly_metrics": {
+            "current": {
+                "week_ending": "2026-01-18",
+                "active_patients": 450,
+                "weekly_visits": 700,
+                "weekly_referrals": 60
+            },
+            "trends": {
+                "active_patients": [
+                    390,
+                    393,
+                    398,
+                    395,
+                    398,
+                    450
+                ],
+                "weekly_visits": [
+                    653,
+                    674,
+                    628,
+                    575,
+                    610,
+                    700
+                ],
+                "weekly_referrals": [
+                    34,
+                    14,
+                    21,
+                    49,
+                    39,
+                    60
+                ]
+            }
+        },
+        "weekly_visits": {
+            "week_ending": "2026-01-17",
+            "locations": [
+                {
+                    "location": "Bellaire",
+                    "Mon": {
+                        "scheduled": 28,
+                        "completed": 26
+                    },
+                    "Tue": {
+                        "scheduled": 32,
+                        "completed": 30
+                    },
+                    "Wed": {
+                        "scheduled": 30,
+                        "completed": 28
+                    },
+                    "Thu": {
+                        "scheduled": 28,
+                        "completed": 26
+                    },
+                    "Fri": {
+                        "scheduled": 18,
+                        "completed": 17
+                    },
+                    "Total": {
+                        "scheduled": 136,
+                        "completed": 127
+                    },
+                    "cancel_percentage": 6.6
+                },
+                {
+                    "location": "I-45",
+                    "Mon": {
+                        "scheduled": 24,
+                        "completed": 22
+                    },
+                    "Tue": {
+                        "scheduled": 28,
+                        "completed": 26
+                    },
+                    "Wed": {
+                        "scheduled": 26,
+                        "completed": 24
+                    },
+                    "Thu": {
+                        "scheduled": 24,
+                        "completed": 22
+                    },
+                    "Fri": {
+                        "scheduled": 16,
+                        "completed": 15
+                    },
+                    "Total": {
+                        "scheduled": 118,
+                        "completed": 109
+                    },
+                    "cancel_percentage": 7.6
+                },
+                {
+                    "location": "Katy",
+                    "Mon": {
+                        "scheduled": 786,
+                        "completed": 35
+                    },
+                    "Tue": {
+                        "scheduled": 42,
+                        "completed": 40
+                    },
+                    "Wed": {
+                        "scheduled": 36,
+                        "completed": 34
+                    },
+                    "Thu": {
+                        "scheduled": 40,
+                        "completed": 37
+                    },
+                    "Fri": {
+                        "scheduled": 22,
+                        "completed": 21
+                    },
+                    "Total": {
+                        "scheduled": 178,
+                        "completed": 167
+                    },
+                    "cancel_percentage": 6.2
+                },
+                {
+                    "location": "Sugar Land",
+                    "Mon": {
+                        "scheduled": 30,
+                        "completed": 0
+                    },
+                    "Tue": {
+                        "scheduled": 34,
+                        "completed": 31
+                    },
+                    "Wed": {
+                        "scheduled": 32,
+                        "completed": 29
+                    },
+                    "Thu": {
+                        "scheduled": 30,
+                        "completed": 27
+                    },
+                    "Fri": {
+                        "scheduled": 20,
+                        "completed": 18
+                    },
+                    "Total": {
+                        "scheduled": 146,
+                        "completed": 132
+                    },
+                    "cancel_percentage": 9.6
+                },
+                {
+                    "location": "Websterrr",
+                    "Mon": {
+                        "scheduled": 22,
+                        "completed": 12
+                    },
+                    "Tue": {
+                        "scheduled": 16,
+                        "completed": 14
+                    },
+                    "Wed": {
+                        "scheduled": 14,
+                        "completed": 12
+                    },
+                    "Thu": {
+                        "scheduled": 16,
+                        "completed": 14
+                    },
+                    "Fri": {
+                        "scheduled": 10,
+                        "completed": 9
+                    },
+                    "Total": {
+                        "scheduled": 70,
+                        "completed": 61
+                    },
+                    "cancel_percentage": 12.9
+                }
+            ]
+        },
+        "location_6week": {
+            "week_ending": "2026-01-17",
+            "locations": [
+                {
+                    "location": "Katy",
+                    "active_patients": 103,
+                    "weekly_visits": 167,
+                    "vs_ly_pct": 12.0
+                },
+                {
+                    "location": "Bellaire",
+                    "active_patients": 96,
+                    "weekly_visits": 127,
+                    "vs_ly_pct": 8.0
+                },
+                {
+                    "location": "Sugar Land",
+                    "active_patients": 82,
+                    "weekly_visits": 132,
+                    "vs_ly_pct": 18.0
+                },
+                {
+                    "location": "I-45",
+                    "active_patients": 62,
+                    "weekly_visits": 109,
+                    "vs_ly_pct": -5.0
+                },
+                {
+                    "location": "Webster",
+                    "active_patients": 29,
+                    "weekly_visits": 61,
+                    "vs_ly_pct": -3.0
+                },
+                {
+                    "location": "sample",
+                    "active_patients": 1,
+                    "weekly_visits": 2,
+                    "vs_ly_pct": 3.0
+                }
+            ]
+        },
+        "referrers": [
+            {
+                "month": "2026-01",
+                "referrer_name": "Dr. Tran",
+                "clinic": "Katy",
+                "referral_count": 18,
+                "avg_monthly_2025": 11.3,
+                "total_2025": 135,
+                "pace_status": "ahead"
+            },
+            {
+                "month": "2026-01",
+                "referrer_name": "Dr. Nair (SL)",
+                "clinic": "Sugar Land",
+                "referral_count": 6,
+                "avg_monthly_2025": 6.2,
+                "total_2025": 74,
+                "pace_status": "on_track"
+            },
+            {
+                "month": "2026-01",
+                "referrer_name": "Dr. Awan",
+                "clinic": "Katy",
+                "referral_count": 3,
+                "avg_monthly_2025": 5.2,
+                "total_2025": 62,
+                "pace_status": "behind"
+            },
+            {
+                "month": "2026-01",
+                "referrer_name": "Dr. Doerr",
+                "clinic": "Katy",
+                "referral_count": 5,
+                "avg_monthly_2025": 4.2,
+                "total_2025": 50,
+                "pace_status": "ahead"
+            },
+            {
+                "month": "2026-01",
+                "referrer_name": "Dr. Kopas",
+                "clinic": "Bellaire",
+                "referral_count": 4,
+                "avg_monthly_2025": 4.1,
+                "total_2025": 49,
+                "pace_status": "on_track"
+            },
+            {
+                "month": "2026-01",
+                "referrer_name": "Dr. Shah (SL)",
+                "clinic": "Sugar Land",
+                "referral_count": 3,
+                "avg_monthly_2025": 3.8,
+                "total_2025": 45,
+                "pace_status": "behind"
+            },
+            {
+                "month": "2026-01",
+                "referrer_name": "Dr. Desai (SL)",
+                "clinic": "Sugar Land",
+                "referral_count": 2,
+                "avg_monthly_2025": 3.6,
+                "total_2025": 43,
+                "pace_status": "behind"
+            },
+            {
+                "month": "2026-01",
+                "referrer_name": "Dr. Gidvani",
+                "clinic": "Bellaire",
+                "referral_count": 6,
+                "avg_monthly_2025": 3.4,
+                "total_2025": 40,
+                "pace_status": "ahead"
+            },
+            {
+                "month": "2026-01",
+                "referrer_name": "Dr. Scoon",
+                "clinic": "I-45",
+                "referral_count": 5,
+                "avg_monthly_2025": 3.3,
+                "total_2025": 39,
+                "pace_status": "ahead"
+            }
+        ],
+        "referrals_clinic": [
+            {
+                "year": 2025,
+                "clinic": "Bellaire",
+                "monthly": {
+                    "jan": 33,
+                    "feb": 45,
+                    "mar": 45,
+                    "apr": 32,
+                    "may": 46,
+                    "jun": 46,
+                    "jul": 33,
+                    "aug": 52,
+                    "sep": 32,
+                    "oct": 44,
+                    "nov": 19,
+                    "dec": 46
+                },
+                "total": 473
+            },
+            {
+                "year": 2025,
+                "clinic": "I-45",
+                "monthly": {
+                    "jan": 34,
+                    "feb": 35,
+                    "mar": 34,
+                    "apr": 27,
+                    "may": 50,
+                    "jun": 29,
+                    "jul": 23,
+                    "aug": 29,
+                    "sep": 29,
+                    "oct": 43,
+                    "nov": 21,
+                    "dec": 22
+                },
+                "total": 376
+            },
+            {
+                "year": 2025,
+                "clinic": "Katy",
+                "monthly": {
+                    "jan": 46,
+                    "feb": 51,
+                    "mar": 43,
+                    "apr": 48,
+                    "may": 47,
+                    "jun": 43,
+                    "jul": 42,
+                    "aug": 46,
+                    "sep": 46,
+                    "oct": 46,
+                    "nov": 25,
+                    "dec": 23
+                },
+                "total": 506
+            },
+            {
+                "year": 2025,
+                "clinic": "Sugar Land",
+                "monthly": {
+                    "jan": 64,
+                    "feb": 32,
+                    "mar": 35,
+                    "apr": 40,
+                    "may": 43,
+                    "jun": 18,
+                    "jul": 25,
+                    "aug": 28,
+                    "sep": 25,
+                    "oct": 38,
+                    "nov": 27,
+                    "dec": 11
+                },
+                "total": 386
+            },
+            {
+                "year": 2025,
+                "clinic": "Webster",
+                "monthly": {
+                    "jan": 19,
+                    "feb": 33,
+                    "mar": 21,
+                    "apr": 22,
+                    "may": 14,
+                    "jun": 17,
+                    "jul": 17,
+                    "aug": 24,
+                    "sep": 14,
+                    "oct": 24,
+                    "nov": 18,
+                    "dec": 16
+                },
+                "total": 239
+            },
+            {
+                "year": 2025,
+                "clinic": "wow",
+                "monthly": {
+                    "jan": 1,
+                    "feb": 2,
+                    "mar": 3,
+                    "apr": 4,
+                    "may": 5,
+                    "jun": 6,
+                    "jul": 7,
+                    "aug": 8,
+                    "sep": 9,
+                    "oct": 10,
+                    "nov": 11,
+                    "dec": 12
+                },
+                "total": 13
+            }
+        ],
+        "collections": [
+            {
+                "quarter": "Q4",
+                "year": 2025,
+                "oct": 356000.0,
+                "nov": 318000.0,
+                "dec": 297000.0,
+                "total": 972000.0,
+                "vs_prior_year_pct": 5.2
+            }
+        ]
+    }
+}
