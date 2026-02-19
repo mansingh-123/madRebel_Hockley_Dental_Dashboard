@@ -4,6 +4,88 @@ import ErrorState from "./components/ErrorState.jsx"
 import AiInsights from "./components/AiInsights.jsx"
 import { fetchPtDashboard, generateAiInsights } from "./services/data.js"
 
+function ReferralCard({ c }) {
+  const [hoveredIndex, setHoveredIndex] = useState(null)
+  const tClass = c.trend > 0 ? "up" : c.trend < 0 ? "down" : ""
+  
+  // Use monthly data for sparkline if available, otherwise default points
+  const sparkPoints = c.sparkline.length > 0 ? c.sparkline : [0,0,0,0,0,0,0,0,0,0,0,0]
+  const maxVal = Math.max(...sparkPoints, 1)
+  
+  const points = sparkPoints.map((val, j) => {
+    const x = (j / (sparkPoints.length - 1)) * 100
+    const y = 48 - ((val / maxVal) * 40)
+    return [x, y]
+  })
+  
+  const pts = points.map((p, j) => {
+    return `${j === 0 ? "M" : "L"} ${p[0]} ${p[1]}`
+  }).join(" ")
+  
+  return (
+    <div className="ref-card">
+      <div className="ref-head">
+        <div className="ref-name">{c.name}</div>
+        <div className={`ref-trend ${tClass}`}>{(c.trend>0?"+":"") + c.trend + "%"}</div>
+      </div>
+      <div className="ref-ytd">{c.ytd} <span className="ref-caption">2026 YTD</span></div>
+      <div className="ref-spark" style={{ position: "relative" }}>
+        <svg viewBox="0 0 100 48" preserveAspectRatio="none" width="100%" height="48" style={{ overflow: "visible" }}>
+          <path d={pts} fill="none" stroke={c.color} strokeWidth="2" />
+          {points.map((p, j) => (
+            <g key={j}>
+               <circle cx={p[0]} cy={p[1]} r="2" fill={c.color} />
+               <circle
+                 cx={p[0]}
+                 cy={p[1]}
+                 r="8"
+                 fill="transparent"
+                 style={{ cursor: "pointer" }}
+                 onMouseEnter={() => setHoveredIndex(j)}
+                 onMouseLeave={() => setHoveredIndex(null)}
+               />
+            </g>
+          ))}
+        </svg>
+        {hoveredIndex !== null && points[hoveredIndex] && (
+            <div
+              style={{
+                position: "absolute",
+                left: `${points[hoveredIndex][0]}%`,
+                top: `${(points[hoveredIndex][1] / 48) * 100}%`,
+                transform: "translate(-50%, -130%)",
+                background: "#1e293b",
+                color: "#fff",
+                padding: "4px 8px",
+                borderRadius: "6px",
+                fontSize: "12px",
+                fontWeight: "600",
+                pointerEvents: "none",
+                whiteSpace: "nowrap",
+                zIndex: 10,
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+              }}
+            >
+              {sparkPoints[hoveredIndex]}
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "-4px",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  borderLeft: "4px solid transparent",
+                  borderRight: "4px solid transparent",
+                  borderTop: "4px solid #1e293b",
+                }}
+              />
+            </div>
+          )}
+      </div>
+      <div className="ref-caption">2025 total: {c.last}</div>
+    </div>
+  )
+}
+
 export default function PTDashboard({ locationId }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -337,38 +419,9 @@ export default function PTDashboard({ locationId }) {
             </div>
           </div>
           <div className="referral-cards">
-            {referralCards.map((c, i) => {
-              const tClass = c.trend > 0 ? "up" : c.trend < 0 ? "down" : ""
-              // Use monthly data for sparkline if available, otherwise default points
-              const sparkPoints = c.sparkline.length > 0 ? c.sparkline : [0,0,0,0,0,0,0,0,0,0,0,0]
-              const maxVal = Math.max(...sparkPoints, 1)
-              const pts = sparkPoints.map((val, j) => {
-                const x = (j / (sparkPoints.length - 1)) * 100
-                const y = 48 - ((val / maxVal) * 40)
-                return `${j === 0 ? "M" : "L"} ${x} ${y}`
-              }).join(" ")
-              
-              return (
-                <div className="ref-card" key={i}>
-                  <div className="ref-head">
-                    <div className="ref-name">{c.name}</div>
-                    <div className={`ref-trend ${tClass}`}>{(c.trend>0?"+":"") + c.trend + "%"}</div>
-                  </div>
-                  <div className="ref-ytd">{c.ytd} <span className="ref-caption">2026 YTD</span></div>
-                  <div className="ref-spark">
-                    <svg viewBox="0 0 100 48" preserveAspectRatio="none" width="100%" height="48">
-                      <path d={pts} fill="none" stroke={c.color} strokeWidth="2" />
-                      {sparkPoints.map((val, j) => {
-                         const x = (j / (sparkPoints.length - 1)) * 100
-                         const y = 48 - ((val / maxVal) * 40)
-                         return <circle key={j} cx={x} cy={y} r="2" fill={c.color} />
-                      })}
-                    </svg>
-                  </div>
-                  <div className="ref-caption">2025 total: {c.last}</div>
-                </div>
-              )
-            })}
+            {referralCards.map((c, i) => (
+              <ReferralCard key={i} c={c} />
+            ))}
           </div>
         </section>
 
