@@ -155,10 +155,13 @@ export async function postLocationOnboard({ locationId, dashboard, source, sheet
   }
 }
 
-export async function generateAiInsights(locationId) {
+export async function generateAiInsights(locationId, year, month) {
   try {
     const fd = new FormData()
     fd.append("location_id", String(locationId || ""))
+    if (year) fd.append("year", String(year))
+    if (month) fd.append("month", String(month))
+    
     const res = await fetch(apiUrl("/ai/generate-insights/"), {
       method: "POST",
       body: fd

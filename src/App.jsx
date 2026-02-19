@@ -192,8 +192,8 @@ React.useEffect(() => {
   ]
   
   const transformedRows = allMonths.map(item => {
-    const csv = item.csv_data
-    const calc = item.calculated_data
+    const csv = item.csv_data || {}
+    const calc = item.calculated_data || {}
   
     return {
       month: item.month,
@@ -229,7 +229,8 @@ React.useEffect(() => {
           }
         } 
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error("Dashboard Error:", err)
         if (alive) setError(true)
       })
       .finally(() => {
@@ -256,7 +257,12 @@ React.useEffect(() => {
   React.useEffect(() => {
     let alive = true
     if (!locationId) return
-    generateAiInsights(locationId)
+
+    // Clear previous insights when changing month/year
+    setAiInsights([])
+    setAiActions([])
+
+    generateAiInsights(locationId, selectedYear, selectedMonth)
       .then(res => {
         if (!alive || !res || !res.ai_response) return
         const ai = res.ai_response || {}
@@ -265,7 +271,7 @@ React.useEffect(() => {
       })
       .catch(() => {})
     return () => { alive = false }
-  }, [locationId])
+  }, [locationId, selectedYear, selectedMonth])
 
   if (error) {
     return (
