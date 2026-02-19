@@ -515,54 +515,55 @@ React.useEffect(() => {
       </section>
 
       <section className="panel tier-section">
-        <div className="panel-title">Growth & Revenue Drivers</div>
+        <div className="panel-title">
+          Growth & Revenue Drivers
+          <span className="badge" style={{ marginLeft: '8px' }}>{selectedMonth} {selectedYear}</span>  
+        </div>
         <div className="summary">
-        <KpiCard variant="kpi" title="New Patients" value={Number(latestView.newPatients || 0)} subtitle="Last month" />
-        <KpiCard variant="kpi" title="New Patient Goal" value={Number(latestView.newPatientGoal || 0)} subtitle="Monthly target" />
-        <KpiCard variant="kpi" title="Lost Patients" value={Number(latestView.lostPatients || 0)} subtitle="Last month" />
+        <KpiCard variant="kpi" title="New Patients" value={Number(latestView.newPatients || 0)} />
+        <KpiCard variant="kpi" title="New Patient Goal" value={Number(latestView.newPatientGoal || 0)} />
+        <KpiCard variant="kpi" title="Lost Patients" value={Number(latestView.lostPatients || 0)}  />
         <KpiCard
           variant="kpi"
           title="Production — General"
           value={'$' + Number(latestView.productionGeneral || 0).toLocaleString()}
-          subtitle="General production • Current month"
         />
         <KpiCard
           variant="kpi"
           title="Production — ORTHO"
           value={'$' + Number(latestView.productionOrtho || 0).toLocaleString()}
-          subtitle="Ortho production • Current month"
         />
         <KpiCard
           variant="kpi"
           title="Collections — General"
           value={'$' + Number(latestView.collectionsGeneral || 0).toLocaleString()}
-          subtitle="General collections • Current month"
         />
         <KpiCard
           variant="kpi"
           title="Collections — ORTHO"
           value={'$' + Number(latestView.collectionsOrtho || 0).toLocaleString()}
-          subtitle="Ortho collections • Current month"
         />
         </div>
       </section>
 
       <section className="compact-panel tier-section">
         <div className="compact-head">
-          <div className="compact-title">Operational Leakage</div>
-          <div className="toggle" onClick={() => setShowLeakage(!showLeakage)}>{showLeakage ? "Hide details" : "Show details"}</div>
+          <div className="compact-title">
+            Operational Leakage
+            <span className="badge" style={{ marginLeft: '8px' }}>{selectedMonth} {selectedYear}</span>  
+          </div>
         </div>
         {showLeakage ? (
           <div className="summary">
-            <KpiCard variant="kpi" title="Lost Production $" value={'$' + Number(latestView.lostProduction || 0).toLocaleString()} subtitle="Last month" />
-            <KpiCard variant="kpi" title="Cancelled + No-Show" value={Number((latestView.cancelledAppointments || 0) + (latestView.noShowAppointments || 0))} subtitle="Total missed appts • Last month" />
-            <KpiCard variant="kpi" title="Cancelled $" value={'$' + Number(latestView.lostCancelled || 0).toLocaleString()} subtitle="Last month" />
-            <KpiCard variant="kpi" title="No-Show $" value={'$' + Number(latestView.lostNoShow || 0).toLocaleString()} subtitle="Last month" />
-            <KpiCard variant="kpi" title="Cancellation Rate" value={`${Number(latestView.cancellationRatePct || 0)}%`} subtitle={`${Number(latestView.cancelledAppointments || 0)} of ${Number(latestView.scheduledAppointments || 0)} appts`} />
-            <KpiCard variant="kpi" title="No-Show Rate" value={`${Number(latestView.noShowRatePct || 0)}%`} subtitle={`${Number(latestView.noShowAppointments || 0)} of ${Number(latestView.scheduledAppointments || 0)} appts`} />
-            <KpiCard variant="kpi" title="Fill Rate" value={Number(latestView.fillRatePct || 0) + '%'} subtitle="Chairs utilized" />
+            <KpiCard variant="kpi" title="Lost Production $" value={'$' + Number(latestView.lostProduction || 0).toLocaleString()} />
+            <KpiCard variant="kpi" title="Cancelled + No-Show" value={Number((latestView.cancelledAppointments || 0) + (latestView.noShowAppointments || 0))}  />
+            <KpiCard variant="kpi" title="Cancelled $" value={'$' + Number(latestView.lostCancelled || 0).toLocaleString()} />
+            <KpiCard variant="kpi" title="No-Show $" value={'$' + Number(latestView.lostNoShow || 0).toLocaleString()} />
+            <KpiCard variant="kpi" title="Cancellation Rate" value={`${Number(latestView.cancellationRatePct || 0)}%`} />
+            <KpiCard variant="kpi" title="No-Show Rate" value={`${Number(latestView.noShowRatePct || 0)}%`} />
+            <KpiCard variant="kpi" title="Fill Rate" value={Number(latestView.fillRatePct || 0) + '%'}  />
           </div>
-        ) : (
+        ) : ( 
           <div className="compact-grid">
             <div className="chip">
               <div className="chip-title">Lost Production $</div>
@@ -594,17 +595,21 @@ React.useEffect(() => {
 
       <section className="compact-panel tier-section">
         <div className="compact-head">
-          <div className="compact-title">Efficiency & Optimization</div>
-          <div className="toggle" onClick={() => setShowOptimization(!showOptimization)}>{showOptimization ? "Hide details" : "Show details"}</div>
+          <div className="compact-title">
+            Efficiency & Optimization
+            <span className="badge" style={{ marginLeft: '8px' }}>{selectedMonth} {selectedYear}</span>
+          </div>
         </div>
         {showOptimization ? (
           <div className="summary">
-            <KpiCard variant="kpi" title="Treatment Acceptance" value={Number(latestView.treatmentAcceptancePct || 0) + '%'} subtitle="Last month" />
+            <KpiCard variant="kpi" title="Treatment Acceptance" value={Number(latestView.treatmentAcceptancePct || 0) + '%'} />
           </div>
         ) : (
           <div className="compact-grid">
             <div className="chip">
-              <div className="chip-title">Treatment Acceptance</div>
+              <div className="chip-title">
+                Treatment Acceptance
+              </div>
               <div className="chip-value">{Number(latestView.treatmentAcceptancePct || 0) + '%'}</div>
             </div>
           </div>
