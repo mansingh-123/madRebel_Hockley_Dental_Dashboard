@@ -52,6 +52,7 @@ export default function Root() {
   const [toastError, setToastError] = useState("")
   const [onboarded, setOnboarded] = useState(false)
   const [template, setTemplate] = useState("")
+  const [dataSource, setDataSource] = useState("")
   
   // Also support location_id for compatibility
   const locationId = getParam("locationId") || getParam("location_id")
@@ -73,6 +74,9 @@ export default function Root() {
         if (res.is_onboarded) {
           setOnboarded(true)
           setTemplate(res.template || "DENTAL")
+          if (res.data_source) {
+            setDataSource(res.data_source)
+          }
         } else {
           setOnboarded(false)
         }
@@ -166,7 +170,7 @@ export default function Root() {
   return (
     <>
       {template === "PT" ? (
-        <PTDashboard locationId={locationId} />
+        <PTDashboard locationId={locationId} dataSource={dataSource} />
       ) : (
         <App locationId={locationId} />
       )}

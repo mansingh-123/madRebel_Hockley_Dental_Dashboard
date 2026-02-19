@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import KpiCard from "./components/KpiCard.jsx";
 import ErrorState from "./components/ErrorState.jsx";
 import AiInsights from "./components/AiInsights.jsx";
-import { fetchPtDashboard, generateAiInsights } from "./services/data.js";
+import { fetchPtDashboard, fetchPtData, generateAiInsights } from "./services/data.js";
 
 function ReferralCard({ c, prevYear }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -97,10 +97,11 @@ function ReferralCard({ c, prevYear }) {
   );
 }
 
-export default function PTDashboard({ locationId }) {
+export default function PTDashboard({ locationId, dataSource }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const [aiData, setAiData] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -110,7 +111,9 @@ export default function PTDashboard({ locationId }) {
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [prevYear, setPrevYear] = useState(currentYear - 1);
 
-  useEffect(() => {
+  const isGoogleSheetSource = String(dataSource || "").toUpperCase() === "GOOGLE_SHEET";
+
+  const loadDashboard = React.useCallback(() => {
     if (!locationId) return;
     let alive = true;
     setLoading(true);
@@ -119,10 +122,9 @@ export default function PTDashboard({ locationId }) {
     fetchPtDashboard(locationId)
       .then((res) => {
         if (!alive) return;
-        const dashboardData = res.data || res;
+        const dashboardData = res?.data || res;
         setData(dashboardData);
 
-        // Derive years from the data
         if (dashboardData?.referrals_clinic?.length) {
           const years = dashboardData.referrals_clinic.map((r) => r.year);
           const maxYear = Math.max(...years);
@@ -143,6 +145,14 @@ export default function PTDashboard({ locationId }) {
         if (alive) setLoading(false);
       });
 
+    return () => {
+      alive = false;
+    };
+  }, [locationId]);
+
+  useEffect(() => {
+    const cleanup = loadDashboard();
+
     // Fetch AI Insights independently
     setAiLoading(true);
     setAiError(null);
@@ -162,10 +172,25 @@ export default function PTDashboard({ locationId }) {
         if (alive) setAiLoading(false);
       });
 
-    return () => {
-      alive = false;
-    };
-  }, [locationId]);
+    return cleanup;
+  }, [locationId, loadDashboard]);
+
+  const handleSync = async () => {
+    if (!locationId) return;
+    setSyncing(true);
+    try {
+      const res = await fetchPtData(locationId);
+      if (res && res.status === "error") {
+        console.error("PT Sync Error:", res.message);
+      } else {
+        loadDashboard();
+      }
+    } catch (e) {
+      console.error("PT Sync Error:", e);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const getQuarterMonths = (q) => {
     switch (q) {
@@ -412,6 +437,15 @@ export default function PTDashboard({ locationId }) {
         <header className="header">
           <div className="brand">PT Dashboard</div>
           <div className="controls">
+            {isGoogleSheetSource && (
+              <button
+                className="badge btn-upload"
+                onClick={handleSync}
+                disabled={syncing || loading}
+              >
+                {syncing ? "Syncing…" : "Sync Data"}
+              </button>
+            )}
             <span>
               <span className="status-dot"></span>
               {loading ? "Loading..." : "Live Data"}
