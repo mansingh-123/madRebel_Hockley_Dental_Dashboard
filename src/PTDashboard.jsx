@@ -672,10 +672,6 @@ export default function PTDashboard({ locationId }) {
               </tbody>
             </table>
           </div>
-          <div className="help">
-            {currentYear} YTD through {sparkLabels[1].replace("Week ending ", "") || "Current"}. Pace based on maintaining{" "}
-            {prevYear} volume.
-          </div>
         </section>
 
         <AiInsights data={aiData} loading={aiLoading} error={aiError} />
