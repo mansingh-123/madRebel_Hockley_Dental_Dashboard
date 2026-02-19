@@ -416,6 +416,9 @@ export default function PTDashboard({ locationId }) {
               <span className="status-dot"></span>
               {loading ? "Loading..." : "Live Data"}
             </span>
+            <span>
+             {loading ? "Loading..." : weekOfLabel()}
+            </span>
           </div>
         </header>
 
