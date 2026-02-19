@@ -556,7 +556,7 @@ React.useEffect(() => {
         {showLeakage ? (
           <div className="summary">
             <KpiCard variant="kpi" title="Lost Production $" value={'$' + Number(latestView.lostProduction || 0).toLocaleString()} />
-            <KpiCard variant="kpi" title="Cancelled + No-Show" value={Number((latestView.cancelledAppointments || 0) + (latestView.noShowAppointments || 0))}  />
+            <KpiCard variant="kpi" title="Cancelled + No-Show" value={selectedIndex > -1 && rows[selectedIndex] ? (rows[selectedIndex].cancelled_appointments || 0) + (rows[selectedIndex].no_show_appointments || 0) : 0}  />
             <KpiCard variant="kpi" title="Cancelled $" value={'$' + Number(latestView.lostCancelled || 0).toLocaleString()} />
             <KpiCard variant="kpi" title="No-Show $" value={'$' + Number(latestView.lostNoShow || 0).toLocaleString()} />
             <KpiCard variant="kpi" title="Cancellation Rate" value={`${Number(latestView.cancellationRatePct || 0)}%`} />
@@ -571,7 +571,7 @@ React.useEffect(() => {
             </div>
             <div className="chip">
               <div className="chip-title">Cancelled + No-Show</div>
-              <div className="chip-value">{Number((latestView.cancelledAppointments || 0) + (latestView.noShowAppointments || 0))}</div>
+              <div className="chip-value">{selectedIndex > -1 && rows[selectedIndex] ? (rows[selectedIndex].cancelled_appointments || 0) + (rows[selectedIndex].no_show_appointments || 0) : 0}</div>
             </div>
             <div className="chip">
               <div className="chip-title">Cancellation Rate</div>
