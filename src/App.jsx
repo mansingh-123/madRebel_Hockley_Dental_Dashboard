@@ -44,6 +44,7 @@ function sortSeries(arr) {
 }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
   const [aiInsights, setAiInsights] = useState([])
   const [aiActions, setAiActions] = useState([])
   const currentYear = new Date().getFullYear()
@@ -51,6 +52,31 @@ function sortSeries(arr) {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('en-US', { month: 'short' }))
   const [dataSource, setDataSource] = useState(null)
   const [showUploadModal, setShowUploadModal] = useState(false)
+
+  // Generate last 7 months (Current + 6 previous)
+  const availableMonths = React.useMemo(() => {
+    const options = []
+    const d = new Date()
+    for (let i = 0; i < 7; i++) {
+      const y = d.getFullYear()
+      const m = d.toLocaleString('en-US', { month: 'short' })
+      options.push({ year: y, month: m, label: `${m} ${y}` })
+      d.setMonth(d.getMonth() - 1)
+    }
+    return options
+  }, [])
+
+  const [selectedDate, setSelectedDate] = useState(availableMonths[0].label)
+
+  function handleDateChange(e) {
+    const val = e.target.value
+    setSelectedDate(val)
+    const opt = availableMonths.find(o => o.label === val)
+    if (opt) {
+      setSelectedYear(opt.year)
+      setSelectedMonth(opt.month)
+    }
+  }
 
   function onData(newRows) {
     setRows(newRows)
@@ -139,93 +165,79 @@ function sortSeries(arr) {
 
 
 React.useEffect(() => {
-  let alive = true
-  if (!locationId) { setLoading(false); return }
+    let alive = true
+    if (!locationId) { setLoading(false); return }
 
-  setLoading(true)
-  setError(false)
+    setLoading(true)
+    setError(false)
+    setErrorMessage("")
 
-  fetchDentalMonthlyReport(locationId, selectedYear, selectedMonth)
-    .then(res => {
-      if (!alive) return
+    fetchDentalMonthlyReport(locationId, selectedYear, selectedMonth)
+      .then(res => {
+        if (!alive) return
 
-       if (res?.status === "success") {
-        const csv = res.csv_data
-        const calc = res.calculated_data
-        console.log("NEW PATIENT GOAL FROM API:", csv.new_patient_goal)
+         if (res?.status === "success") {
+          const csv = res.csv_data
+          const calc = res.calculated_data
+          console.log("NEW PATIENT GOAL FROM API:", csv.new_patient_goal)
 
-      /*  const transformedRow = {
-          month: res.month,
-          active_patients: csv.active_patients,
-          new_patients: csv.new_patients,
-          new_patient_goal: csv.new_patient_goal,
-          lost_patients: csv.lost_patients,
-          production_general: csv.production_general,
-          production_ortho: csv.production_ortho,
-          collections_general: csv.collections_general,
-          collections_ortho: csv.collections_ortho,
-          scheduled_appointments: csv.scheduled_appts,
-          cancelled_appointments: csv.cancelled,
-          no_show_appointments: csv.no_shows,
-          lost_production: calc.lost_production,
-          lost_cancelled: csv.cancelled_production,
-          lost_noshow: csv.no_show_production,
-          treatment_proposed: csv.treatment_proposed,
-          treatment_accepted: csv.treatment_accepted
+        const allMonths = [
+    ...(res.last_6_months || []),
+    {
+      month: res.month,
+      year: res.year,
+      csv_data: res.csv_data,
+      calculated_data: res.calculated_data
+    }
+  ]
+  
+  const transformedRows = allMonths.map(item => {
+    const csv = item.csv_data
+    const calc = item.calculated_data
+  
+    return {
+      month: item.month,
+      active_patients: csv.active_patients,
+      new_patients: csv.new_patients,
+      new_patient_goal: csv.new_patient_goal,
+      lost_patients: csv.lost_patients,
+      production_general: csv.production_general,
+      production_ortho: csv.production_ortho,
+      collections_general: csv.collections_general,
+      collections_ortho: csv.collections_ortho,
+      scheduled_appointments: csv.scheduled_appts,
+      cancelled_appointments: csv.cancelled,
+      no_show_appointments: csv.no_shows,
+      lost_production: calc.lost_production,
+      lost_cancelled: csv.cancelled_production,
+      lost_noshow: csv.no_show_production,
+      treatment_proposed: csv.treatment_proposed,
+      treatment_accepted: csv.treatment_accepted
+    }
+  })
+  
+  onData(transformedRows)
+  
+        } else {
+          // If specific "no data" error, don't block the UI, just show a message
+          if (res?.message && res.message.includes("No data found")) {
+            setErrorMessage(res.message)
+            // Optionally clear data or keep previous? 
+            // User requested "stay on dashboard", so we won't set global Error state
+          } else {
+            setError(true)
+          }
         } 
-
-        onData([transformedRow]) */
-
-      const allMonths = [
-  ...(res.last_6_months || []),
-  {
-    month: res.month,
-    year: res.year,
-    csv_data: res.csv_data,
-    calculated_data: res.calculated_data
-  }
-]
-
-const transformedRows = allMonths.map(item => {
-  const csv = item.csv_data
-  const calc = item.calculated_data
-
-  return {
-    month: item.month,
-    active_patients: csv.active_patients,
-    new_patients: csv.new_patients,
-    new_patient_goal: csv.new_patient_goal,
-    lost_patients: csv.lost_patients,
-    production_general: csv.production_general,
-    production_ortho: csv.production_ortho,
-    collections_general: csv.collections_general,
-    collections_ortho: csv.collections_ortho,
-    scheduled_appointments: csv.scheduled_appts,
-    cancelled_appointments: csv.cancelled,
-    no_show_appointments: csv.no_shows,
-    lost_production: calc.lost_production,
-    lost_cancelled: csv.cancelled_production,
-    lost_noshow: csv.no_show_production,
-    treatment_proposed: csv.treatment_proposed,
-    treatment_accepted: csv.treatment_accepted
-  }
-})
-
-onData(transformedRows)
-
-      } else {
-        setError(true)
-      } 
-    })
-    .catch(() => {
-      if (alive) setError(true)
-    })
-    .finally(() => {
-      if (alive) setLoading(false)
-    })
-
-  return () => { alive = false }
-}, [locationId, selectedYear, selectedMonth])
+      })
+      .catch(() => {
+        if (alive) setError(true)
+      })
+      .finally(() => {
+        if (alive) setLoading(false)
+      })
+  
+    return () => { alive = false }
+  }, [locationId, selectedYear, selectedMonth])
 
 
 
@@ -373,14 +385,10 @@ onData(transformedRows)
             <span><span className="status-dot"></span>{loading ? "Loading…" : "Live API"}</span>
             <span className="badge">ID: {locationId || "—"}</span>
             <span>
-              <select className="badge" value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))}>
-                <option value={new Date().getFullYear()}>{new Date().getFullYear()}</option>
-                <option value={new Date().getFullYear() - 1}>{new Date().getFullYear() - 1}</option>
-              </select>
-            </span>
-            <span>
-              <select className="badge" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)}>
-                {months.map((m, i) => (<option key={i} value={m}>{m}</option>))}
+              <select className="badge" value={selectedDate} onChange={handleDateChange}>
+                {availableMonths.map((opt, i) => (
+                  <option key={i} value={opt.label}>{opt.label}</option>
+                ))}
               </select>
             </span>
           </div>
@@ -392,6 +400,32 @@ onData(transformedRows)
         <span className="tier-pill t3"><span className="dot"></span>Operational Leakage</span>
         <span className="tier-pill t4"><span className="dot"></span>Efficiency & Optimization</span>
       </div>
+
+      {errorMessage && (
+        <div style={{
+          background: "#fee2e2",
+          border: "1px solid #fecaca",
+          color: "#b91c1c",
+          padding: "12px",
+          borderRadius: "8px",
+          marginBottom: "16px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center"
+        }}>
+          <span>{errorMessage}</span>
+          <button 
+            onClick={() => setErrorMessage("")}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "#b91c1c",
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
+          >✕</button>
+        </div>
+      )}
 
       <section className="panel tier-section">
         <div className="panel-title">Executive Snapshot</div>
@@ -667,6 +701,28 @@ onData(transformedRows)
           </ul>
         </div>
       </section>
+
+      {showUploadModal && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div className="panel" style={{ width: "400px", maxWidth: "90vw" }}>
+            <div className="panel-head">
+              <div className="panel-title">Upload Dental Data</div>
+              <div style={{ cursor: "pointer" }} onClick={() => setShowUploadModal(false)}>✕</div>
+            </div>
+            <div style={{ padding: "20px 0" }}>
+              <CsvUploader onData={handleCsvUpload} />
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="footer">
         <div>Powered by MedRebel</div>
