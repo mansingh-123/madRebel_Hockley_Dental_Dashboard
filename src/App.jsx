@@ -479,16 +479,16 @@ React.useEffect(() => {
       <section className="grid">
         <ChartCard
           title="Production"
-          months={sortedMonths}
+          months={months}
           datasets={[
             { label: "General", data: kpis.series.productionGeneral, color: "#3b82f6" },
             { label: "ORTHO", data: kpis.series.productionOrtho, color: "#a855f7" }
           ]}
           type="bar"
-        />
+        />  
         <ChartCard
           title="Collections"
-          months={sortedMonths}
+          months={months}
           datasets={[
             { label: "General", data: sortSeries(kpis.series.collectionsGeneral), color: "#22c55e" },
             { label: "ORTHO", data: sortSeries(kpis.series.collectionsOrtho), color: "#f59e0b" }
@@ -497,7 +497,7 @@ React.useEffect(() => {
         />
         <ChartCard
           title="New Patients vs Goal"
-          months={sortedMonths}
+          months={months}
           datasets={[
             { label: "New Patients", data: sortSeries(kpis.series.newPatients), color: "#3b82f6" },
             { label: "Goal", data: sortSeries(kpis.series.newPatientGoal), color: "#cbd5e1" }
@@ -506,7 +506,7 @@ React.useEffect(() => {
         />
         <ChartCard
           title="Collection Ratio"
-          months={sortedMonths}
+          months={months}
           datasets={[
             { label: "Ratio %", data: sortSeries(kpis.series.collectionRatioPct), color: "#a855f7" }
           ]}
@@ -614,7 +614,7 @@ React.useEffect(() => {
       <section className="grid">
         <ChartCard
           title="Cancellation Rate"
-          months={sortedMonths}
+          months={months}
           datasets={[
             { label: "Cancelled %", data: sortSeries(kpis.series.cancellationRatePct), color: "#f59e0b" }
           ]}
@@ -622,7 +622,7 @@ React.useEffect(() => {
         />
         <ChartCard
           title="No-Show Rate"
-          months={sortedMonths}
+          months={months}
           datasets={[
             { label: "No-Show %", data: sortSeries(kpis.series.noShowRatePct), color: "#3b82f6" }
           ]}
@@ -630,7 +630,7 @@ React.useEffect(() => {
         />
         <ChartCard
           title="Net Patient Growth"
-          months={sortedMonths}
+          months={months}
           datasets={[
             { label: "Net", data: sortSeries(kpis.series.netPatientGrowth), color: "#22c55e" },
             { label: "Goal", data: sortSeries(kpis.series.newPatientGoal), color: "#cbd5e1" }
@@ -639,7 +639,7 @@ React.useEffect(() => {
         />
         <ChartCard
           title="Treatment Acceptance"
-          months={sortedMonths}
+          months={months}
           datasets={[
             { label: "Acceptance %", data: sortSeries(kpis.series.treatmentAcceptancePct), color: "#3b82f6" }
           ]}
@@ -647,7 +647,7 @@ React.useEffect(() => {
         />
         <ChartCard
           title="Fill Rate"
-          months={sortedMonths}
+          months={months}
           datasets={[
             { label: "Fill Rate %", data: sortSeries(kpis.series.fillRatePct), color: "#22c55e" }
           ]}
