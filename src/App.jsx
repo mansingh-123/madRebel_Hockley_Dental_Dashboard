@@ -8,6 +8,8 @@ import { computeKpis, sampleMonthlyData, monthsFromData } from "./utils/kpi.js"
 import { API_BASE, API_PATH, API_STYLE } from "./config.js"
 import { fetchMonthlyKpi, buildApiUrl, postLocationOnboard, generateAiInsights, fetchLocationDetails, uploadDentalCsv } from "./services/data.js"
 import CsvUploader from "./components/CsvUploader.jsx"
+import { fetchDentalMonthlyReport } from "./services/data.js"
+
 
 function getIdFromUrl() {
   const params = new URLSearchParams(window.location.search)
@@ -25,6 +27,21 @@ export default function App({ locationId }) {
   const [rows, setRows] = useState(sampleMonthlyData)
   const [kpis, setKpis] = useState(computeKpis(rows))
   const months = monthsFromData(rows)
+  const monthOrder = [
+  "Jan","Feb","Mar","Apr","May","Jun",
+  "Jul","Aug","Sep","Oct","Nov","Dec"
+]
+
+const sortedIndexes = months
+  .map((m, i) => ({ month: m, index: i }))
+  .sort((a, b) =>
+    monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month)
+  )
+
+const sortedMonths = sortedIndexes.map(x => x.month)
+function sortSeries(arr) {
+  return sortedIndexes.map(x => arr[x.index])
+}
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(false)
   const [aiInsights, setAiInsights] = useState([])
@@ -61,7 +78,7 @@ export default function App({ locationId }) {
   const [showLeakage, setShowLeakage] = React.useState(false)
   const [showOptimization, setShowOptimization] = React.useState(false)
 
-  React.useEffect(() => {
+  {/*React.useEffect(() => {
     // if (!API_BASE) return
     let alive = true
     if (!locationId) { setLoading(false); return }
@@ -87,7 +104,130 @@ export default function App({ locationId }) {
       })
       .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
-  }, [locationId, selectedYear, selectedMonth])
+  }, [locationId, selectedYear, selectedMonth]) */}
+
+ {/* React.useEffect(() => {
+  let alive = true
+  if (!locationId) { setLoading(false); return }
+
+  setLoading(true)
+  setError(false)
+
+  fetchDentalMonthlyReport(locationId, selectedYear, selectedMonth)
+    .then(res => {
+      if (!alive) return
+
+      if (res?.status === "success" && res.calculated_data) {
+        const newRows = Array.isArray(res.calculated_data)
+          ? res.calculated_data
+          : [res.calculated_data]
+
+        onData(newRows)
+      } else {
+        setError(true)
+      }
+    })
+    .catch(() => {
+      if (alive) setError(true)
+    })
+    .finally(() => {
+      if (alive) setLoading(false)
+    })
+
+  return () => { alive = false }
+}, [locationId, selectedYear, selectedMonth]) */}
+
+
+React.useEffect(() => {
+  let alive = true
+  if (!locationId) { setLoading(false); return }
+
+  setLoading(true)
+  setError(false)
+
+  fetchDentalMonthlyReport(locationId, selectedYear, selectedMonth)
+    .then(res => {
+      if (!alive) return
+
+       if (res?.status === "success") {
+        const csv = res.csv_data
+        const calc = res.calculated_data
+        console.log("NEW PATIENT GOAL FROM API:", csv.new_patient_goal)
+
+      /*  const transformedRow = {
+          month: res.month,
+          active_patients: csv.active_patients,
+          new_patients: csv.new_patients,
+          new_patient_goal: csv.new_patient_goal,
+          lost_patients: csv.lost_patients,
+          production_general: csv.production_general,
+          production_ortho: csv.production_ortho,
+          collections_general: csv.collections_general,
+          collections_ortho: csv.collections_ortho,
+          scheduled_appointments: csv.scheduled_appts,
+          cancelled_appointments: csv.cancelled,
+          no_show_appointments: csv.no_shows,
+          lost_production: calc.lost_production,
+          lost_cancelled: csv.cancelled_production,
+          lost_noshow: csv.no_show_production,
+          treatment_proposed: csv.treatment_proposed,
+          treatment_accepted: csv.treatment_accepted
+        } 
+
+        onData([transformedRow]) */
+
+      const allMonths = [
+  ...(res.last_6_months || []),
+  {
+    month: res.month,
+    year: res.year,
+    csv_data: res.csv_data,
+    calculated_data: res.calculated_data
+  }
+]
+
+const transformedRows = allMonths.map(item => {
+  const csv = item.csv_data
+  const calc = item.calculated_data
+
+  return {
+    month: item.month,
+    active_patients: csv.active_patients,
+    new_patients: csv.new_patients,
+    new_patient_goal: csv.new_patient_goal,
+    lost_patients: csv.lost_patients,
+    production_general: csv.production_general,
+    production_ortho: csv.production_ortho,
+    collections_general: csv.collections_general,
+    collections_ortho: csv.collections_ortho,
+    scheduled_appointments: csv.scheduled_appts,
+    cancelled_appointments: csv.cancelled,
+    no_show_appointments: csv.no_shows,
+    lost_production: calc.lost_production,
+    lost_cancelled: csv.cancelled_production,
+    lost_noshow: csv.no_show_production,
+    treatment_proposed: csv.treatment_proposed,
+    treatment_accepted: csv.treatment_accepted
+  }
+})
+
+onData(transformedRows)
+
+      } else {
+        setError(true)
+      } 
+    })
+    .catch(() => {
+      if (alive) setError(true)
+    })
+    .finally(() => {
+      if (alive) setLoading(false)
+    })
+
+  return () => { alive = false }
+}, [locationId, selectedYear, selectedMonth])
+
+
 
   React.useEffect(() => {
     let alive = true
@@ -152,7 +292,7 @@ export default function App({ locationId }) {
     return {
       activePatients: latest.active_patients || 0,
       newPatients: latest.new_patients || 0,
-      newPatientGoal: 200,
+      newPatientGoal: latest.new_patient_goal || 200,
       lostPatients: latest.lost_patients || 0,
       netPatientGrowth: latestNetGrowth,
       productionGeneral: latest.production_general || 0,
@@ -317,7 +457,7 @@ export default function App({ locationId }) {
       <section className="grid">
         <ChartCard
           title="Production"
-          months={months}
+          months={sortedMonths}
           datasets={[
             { label: "General", data: kpis.series.productionGeneral, color: "#3b82f6" },
             { label: "ORTHO", data: kpis.series.productionOrtho, color: "#a855f7" }
@@ -326,27 +466,27 @@ export default function App({ locationId }) {
         />
         <ChartCard
           title="Collections"
-          months={months}
+          months={sortedMonths}
           datasets={[
-            { label: "General", data: kpis.series.collectionsGeneral, color: "#22c55e" },
-            { label: "ORTHO", data: kpis.series.collectionsOrtho, color: "#f59e0b" }
+            { label: "General", data: sortSeries(kpis.series.collectionsGeneral), color: "#22c55e" },
+            { label: "ORTHO", data: sortSeries(kpis.series.collectionsOrtho), color: "#f59e0b" }
           ]}
           type="bar"
         />
         <ChartCard
           title="New Patients vs Goal"
-          months={months}
+          months={sortedMonths}
           datasets={[
-            { label: "New Patients", data: kpis.series.newPatients, color: "#3b82f6" },
-            { label: "Goal", data: kpis.series.newPatientGoal, color: "#cbd5e1" }
+            { label: "New Patients", data: sortSeries(kpis.series.newPatients), color: "#3b82f6" },
+            { label: "Goal", data: sortSeries(kpis.series.newPatientGoal), color: "#cbd5e1" }
           ]}
           type="line"
         />
         <ChartCard
           title="Collection Ratio"
-          months={months}
+          months={sortedMonths}
           datasets={[
-            { label: "Ratio %", data: kpis.series.collectionRatioPct, color: "#a855f7" }
+            { label: "Ratio %", data: sortSeries(kpis.series.collectionRatioPct), color: "#a855f7" }
           ]}
           type="line"
         />
@@ -452,42 +592,42 @@ export default function App({ locationId }) {
       <section className="grid">
         <ChartCard
           title="Cancellation Rate"
-          months={months}
+          months={sortedMonths}
           datasets={[
-            { label: "Cancelled %", data: kpis.series.cancellationRatePct, color: "#f59e0b" }
+            { label: "Cancelled %", data: sortSeries(kpis.series.cancellationRatePct), color: "#f59e0b" }
           ]}
           type="line"
         />
         <ChartCard
           title="No-Show Rate"
-          months={months}
+          months={sortedMonths}
           datasets={[
-            { label: "No-Show %", data: kpis.series.noShowRatePct, color: "#3b82f6" }
+            { label: "No-Show %", data: sortSeries(kpis.series.noShowRatePct), color: "#3b82f6" }
           ]}
           type="line"
         />
         <ChartCard
           title="Net Patient Growth"
-          months={months}
+          months={sortedMonths}
           datasets={[
-            { label: "Net", data: kpis.series.netPatientGrowth, color: "#22c55e" },
-            { label: "Goal", data: kpis.series.newPatientGoal, color: "#cbd5e1" }
+            { label: "Net", data: sortSeries(kpis.series.netPatientGrowth), color: "#22c55e" },
+            { label: "Goal", data: sortSeries(kpis.series.newPatientGoal), color: "#cbd5e1" }
           ]}
           type="line"
         />
         <ChartCard
           title="Treatment Acceptance"
-          months={months}
+          months={sortedMonths}
           datasets={[
-            { label: "Acceptance %", data: kpis.series.treatmentAcceptancePct, color: "#3b82f6" }
+            { label: "Acceptance %", data: sortSeries(kpis.series.treatmentAcceptancePct), color: "#3b82f6" }
           ]}
           type="line"
         />
         <ChartCard
           title="Fill Rate"
-          months={months}
+          months={sortedMonths}
           datasets={[
-            { label: "Fill Rate %", data: kpis.series.fillRatePct, color: "#22c55e" }
+            { label: "Fill Rate %", data: sortSeries(kpis.series.fillRatePct), color: "#22c55e" }
           ]}
           type="line"
         />

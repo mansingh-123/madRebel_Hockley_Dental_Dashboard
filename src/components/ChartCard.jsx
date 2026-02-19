@@ -21,6 +21,11 @@ export default function ChartCard({ title, months, datasets, type = "line" }) {
   const chartRef = useRef(null)
 
   useEffect(() => {
+    if (!months?.length || !datasets?.length) return
+    console.log("chart data",months, datasets)
+    console.log("MONTHS:", months)
+    console.log("DATA VALUES:", datasets[0].data)
+
     const ctx = canvasRef.current.getContext("2d")
     if (chartRef.current) chartRef.current.destroy()
     chartRef.current = new Chart(ctx, {
@@ -38,7 +43,9 @@ export default function ChartCard({ title, months, datasets, type = "line" }) {
             backgroundColor: isLine ? toRgba(baseColor, 0.12) : toRgba(baseColor, lightenBar ? 0.35 : 0.85),
             pointBackgroundColor: isLine ? baseColor : undefined,
             pointBorderColor: isLine ? "#ffffff" : undefined,
-            pointRadius: isLine ? 3 : 0,
+            pointRadius: isLine ? 6 : 0,
+            pointHoverRadius: isLine ? 12 : 0,
+            pointHitRadius: isLine ? 30 : 0, 
             borderWidth: isLine ? 2 : 1,
             tension: 0.3,
             fill: isLine ? true : false
@@ -48,13 +55,26 @@ export default function ChartCard({ title, months, datasets, type = "line" }) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+
+        interaction: {
+        mode: "nearest",
+        intersect: false
+       },
+
         plugins: {
           legend: { display: true },
-          tooltip: { enabled: true }
+          tooltip: { enabled: true}
         },
+        elements: {
+      point: {
+      radius: 6,
+      hoverRadius: 12,
+      hitRadius: 30   
+    }
+  },
         scales: {
           y: { beginAtZero: true }
-        }
+        },
       }
     })
     return () => {

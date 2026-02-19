@@ -52,7 +52,15 @@ body { margin: 0; font-family: Inter, system-ui, Arial; background: linear-gradi
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px }
 .card { background: var(--panel); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; border: 1px solid #e5e7eb; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) }
 .card-title { font-size: 14px; color: var(--muted) }
-.chart-wrap { height: 300px }
+.chart-wrap { position: relative;
+  height: 300px;
+  width: 100%; }
+
+  .chart-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+  cursor: pointer;
+}
 
 .trend { margin-top: 8px }
 .table-wrap { overflow: auto }

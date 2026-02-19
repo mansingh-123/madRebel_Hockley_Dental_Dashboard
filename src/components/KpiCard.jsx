@@ -34,9 +34,9 @@ export default function KpiCard({ title, value, subtitle, variant = "kpi", class
     <div className={`${rootClass}${className ? ` ${className}` : ""}`}>
       {isMetric && (trendPct !== undefined || trendLabel) ? (
         <div className="metric-trend-badge">
-          {trendPct !== undefined ? <div className={`pct ${dir}`}>{(trendPct > 0 ? "+" : "") + (typeof trendPct === "number" ? trendPct.toFixed(1) : trendPct)}%</div> : null}
-          {trendLabel ? <div className="sub">{trendLabel}</div> : null}
-        </div>
+         {/* {trendPct !== undefined ? <div className={`pct ${dir}`}>{(trendPct > 0 ? "+" : "") + (typeof trendPct === "number" ? trendPct.toFixed(1) : trendPct)}%</div> : null} 
+          {trendLabel ? <div className="sub">{trendLabel}</div> : null} */}
+        </div> 
       ) : null}
       <div className={titleClass}>{title}</div>
       <div className={valueClass}>{value}</div>
@@ -99,7 +99,7 @@ export default function KpiCard({ title, value, subtitle, variant = "kpi", class
       {isMetric && Array.isArray(sparklineLabels) && sparklineLabels.length === 2 ? (
         <div className="sparkline-labels">
           <span>{sparklineLabels[0]}</span>
-          <span>{sparklineLabels[1]}</span>
+          {/* <span>{sparklineLabels[1]}</span> */}
         </div>
       ) : null}
     </div>

@@ -33,7 +33,7 @@ export function computeKpis(rows) {
       return pct(filled, scheduled)
     }),
     netPatientGrowth: rows.map(r => (r.new_patients || 0) - (r.lost_patients || 0)),
-    newPatientGoal: rows.map(() => goalNewPatientsPerMonth),
+    newPatientGoal: rows.map(r => r.new_patient_goal || goalNewPatientsPerMonth),
     treatmentAcceptancePct: rows.map(r => pct(r.treatment_accepted || 0, r.treatment_proposed || 0)),
     lostProduction: rows.map(r => r.lost_production || 0),
     lostCancelled: rows.map(r => r.lost_cancelled || 0),
@@ -60,7 +60,7 @@ export function computeKpis(rows) {
   const latestSummary = {
     activePatients: latest.active_patients || 0,
     newPatients: latest.new_patients || 0,
-    newPatientGoal: goalNewPatientsPerMonth,
+    newPatientGoal: latest.new_patient_goal || goalNewPatientsPerMonth,
     lostPatients: latest.lost_patients || 0,
     netPatientGrowth: latestNetGrowth,
     productionGeneral: latest.production_general || 0,
@@ -94,7 +94,7 @@ export function computeKpis(rows) {
     ]
   }
 
-  return { series, latest }
+  return { series, latest: latestSummary }
 }
 
 export const sampleMonthlyData = [
@@ -206,4 +206,4 @@ export const sampleMonthlyData = [
     treatment_proposed: 450000,
     treatment_accepted: 250000
   }
-]
+] 
