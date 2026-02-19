@@ -218,11 +218,9 @@ React.useEffect(() => {
   onData(transformedRows)
   
         } else {
-          // If specific "no data" error, don't block the UI, just show a message
           if (res?.message && res.message.includes("No data found")) {
             setErrorMessage(res.message)
-            // Optionally clear data or keep previous? 
-            // User requested "stay on dashboard", so we won't set global Error state
+            onData([])
           } else {
             setError(true)
           }
