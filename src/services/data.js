@@ -172,3 +172,38 @@ export async function generateAiInsights(locationId) {
     return { status: "error", message: "Network error or CORS blocked" }
   }
 }
+
+
+export async function fetchDentalMonthlyReport(locationId, year, month) {
+  try {
+    if (!locationId || !year || !month) {
+      return {
+        status: "error",
+        message: "location_id, year and month are required"
+      }
+    }
+
+    const url = apiUrl(
+      `/reports/dental/data/by-month/?location_id=${encodeURIComponent(locationId)}&year=${year}&month=${month}`
+    )
+
+    const res = await fetch(url)
+
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      return {
+        status: "error",
+        message: json.message || `Server error (${res.status})`
+      }
+    }
+
+    return await res.json()
+  } catch (e) {
+    console.error("Dental Monthly Report Error:", e)
+    return {
+      status: "error",
+      message: "Network error or CORS blocked"
+    }
+  }
+}
+
