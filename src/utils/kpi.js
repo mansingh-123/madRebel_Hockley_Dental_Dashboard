@@ -21,8 +21,8 @@ export function computeKpis(rows) {
     collectionsOrtho: rows.map(r => r.collections_ortho || 0),
     collectionsTotal: rows.map(r => (r.collections_general || 0) + (r.collections_ortho || 0)),
     newPatients: rows.map(r => r.new_patients || 0),
-    lostPatients: rows.map(r => r.lost_patients || 0),
-    collectionRatioPct: rows.map(r => pct((r.collections_general || 0) + (r.collections_ortho || 0), (r.production_general || 0) + (r.production_ortho || 0))),
+    lostPatients: rows.map(r => r.lost_patients || 0), 
+    collectionRatioPct: rows.map(r => r.collection_ratio || 0),
     cancellationRatePct: rows.map(r => pct(r.cancelled_appointments || 0, r.scheduled_appointments || 0)),
     noShowRatePct: rows.map(r => pct(r.no_show_appointments || 0, r.scheduled_appointments || 0)),
     fillRatePct: rows.map(r => {
@@ -43,8 +43,8 @@ export function computeKpis(rows) {
     missedAppointments: rows.map(r => (r.cancelled_appointments || 0) + (r.no_show_appointments || 0))
   }
 
-  const latest = rows[rows.length - 1] || {}
-  const latestCollectionRatio = pct((latest.collections_general || 0) + (latest.collections_ortho || 0), (latest.production_general || 0) + (latest.production_ortho || 0))
+  const latest = rows[rows.length - 1] || {} 
+  const latestCollectionRatio = latest.collection_ratio || 0
   const latestCancellationRate = pct(latest.cancelled_appointments || 0, latest.scheduled_appointments || 0)
   const latestNoShowRate = pct(latest.no_show_appointments || 0, latest.scheduled_appointments || 0)
   const latestFillRate = (() => {

@@ -211,7 +211,8 @@ React.useEffect(() => {
       lost_cancelled: csv.cancelled_production,
       lost_noshow: csv.no_show_production,
       treatment_proposed: csv.treatment_proposed,
-      treatment_accepted: csv.treatment_accepted
+      treatment_accepted: csv.treatment_accepted,
+      collection_ratio: calc.collection_ratio
     }
   })
   
@@ -292,7 +293,7 @@ React.useEffect(() => {
   }
   function latestFromRow(r) {
     const latest = r || {}
-    const latestCollectionRatio = pctLocal((latest.collections_general || 0) + (latest.collections_ortho || 0), (latest.production_general || 0) + (latest.production_ortho || 0))
+    const latestCollectionRatio = latest.collection_ratio || 0;
     const latestCancellationRate = pctLocal(latest.cancelled_appointments || 0, latest.scheduled_appointments || 0)
     const latestNoShowRate = pctLocal(latest.no_show_appointments || 0, latest.scheduled_appointments || 0)
     const latestFillRate = (() => {
