@@ -99,7 +99,7 @@ export default function KpiCard({ title, value, subtitle, variant = "kpi", class
       {isMetric && Array.isArray(sparklineLabels) && sparklineLabels.length === 2 ? (
         <div className="sparkline-labels">
           <span>{sparklineLabels[0]}</span>
-          {/* <span>{sparklineLabels[1]}</span> */}
+          <span>{sparklineLabels[1]}</span>
         </div>
       ) : null}
     </div>

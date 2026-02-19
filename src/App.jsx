@@ -1,12 +1,10 @@
 import React, { useState } from "react"
-import OnboardingForm from "./components/OnboardingForm.jsx"
 import KpiCard from "./components/KpiCard.jsx"
 import ChartCard from "./components/ChartCard.jsx"
 import TrendTable from "./components/TrendTable.jsx"
 import ErrorState from "./components/ErrorState.jsx"
-import { computeKpis, sampleMonthlyData, monthsFromData } from "./utils/kpi.js"
-import { API_BASE, API_PATH, API_STYLE } from "./config.js"
-import { fetchMonthlyKpi, buildApiUrl, postLocationOnboard, generateAiInsights, fetchLocationDetails, uploadDentalCsv } from "./services/data.js"
+import { computeKpis, monthsFromData } from "./utils/kpi.js"
+import { generateAiInsights, fetchLocationDetails, uploadDentalCsv } from "./services/data.js"
 import CsvUploader from "./components/CsvUploader.jsx"
 import { fetchDentalMonthlyReport } from "./services/data.js"
 
@@ -24,9 +22,9 @@ function getOnboardedFromUrl() {
 }
 
 export default function App({ locationId }) {
-  const [rows, setRows] = useState(sampleMonthlyData)
-  const [kpis, setKpis] = useState(computeKpis(rows))
-  const months = monthsFromData(rows)
+  const [rows, setRows] = useState(null)
+  const [kpis, setKpis] = useState(null)
+  const months = rows ? monthsFromData(rows) : []
   const monthOrder = [
   "Jan","Feb","Mar","Apr","May","Jun",
   "Jul","Aug","Sep","Oct","Nov","Dec"
@@ -40,6 +38,7 @@ const sortedIndexes = months
 
 const sortedMonths = sortedIndexes.map(x => x.month)
 function sortSeries(arr) {
+  if (!arr) return []
   return sortedIndexes.map(x => arr[x.index])
 }
   const [loading, setLoading] = useState(false)
@@ -332,7 +331,7 @@ React.useEffect(() => {
     }
   }
   const selectedIndex = months.findIndex(m => m === selectedMonth)
-  const latestView = latestFromRow((selectedIndex > -1 ? rows[selectedIndex] : rows[rows.length - 1]) || {})
+  const latestView = latestFromRow((rows && rows.length > 0 ? (selectedIndex > -1 ? rows[selectedIndex] : rows[rows.length - 1]) : {}) || {})
   function weekOfLabel() {
     const d = new Date()
     const day = d.getDay()
@@ -373,8 +372,40 @@ React.useEffect(() => {
     return [text, ""]
   }
 
-  if (locationId && !rows) {
-    // Should not happen if rows initialized to sample or fetched
+  if (loading && !rows) {
+    return (
+      <div className="page dental">
+        <div className="container">
+          <header className="header">
+            <div className="brand">DENTAL Dashboard</div>
+            <div className="controls">
+              <span><span className="status-dot"></span>Loading...</span>
+            </div>
+          </header>
+          <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+            Loading dashboard data...
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!rows || !kpis) {
+    return (
+      <div className="page dental">
+        <div className="container">
+          <header className="header">
+            <div className="brand">DENTAL Dashboard</div>
+            <div className="controls">
+              <span><span className="status-dot" style={{background:"#ef4444"}}></span>No Data</span>
+            </div>
+          </header>
+          <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+            {errorMessage || "No data available for this period."}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
