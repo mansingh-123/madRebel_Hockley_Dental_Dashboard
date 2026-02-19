@@ -462,6 +462,10 @@ React.useEffect(() => {
         </div>
       )}
 
+      <>
+      {!errorMessage && 
+      
+      <>
       <section className="panel tier-section">
         <div className="panel-title">Executive Snapshot</div>
         <div className="summary summary-top">
@@ -758,6 +762,10 @@ React.useEffect(() => {
           </div>
         </div>
       )}
+      </>
+      }
+      </>
+      
 
       <footer className="footer">
         <div>Powered by MedRebel</div>
