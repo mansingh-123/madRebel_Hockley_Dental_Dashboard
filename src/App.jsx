@@ -103,65 +103,6 @@ function sortSeries(arr) {
   const [showLeakage, setShowLeakage] = React.useState(false)
   const [showOptimization, setShowOptimization] = React.useState(false)
 
-  {/*React.useEffect(() => {
-    // if (!API_BASE) return
-    let alive = true
-    if (!locationId) { setLoading(false); return }
-    
-    // Pass selected year/month to URL builder
-    const url = buildApiUrl({ 
-      base: API_BASE, 
-      path: API_PATH, 
-      style: API_STYLE, 
-      id: locationId,
-      year: selectedYear,
-      month: selectedMonth
-    })
-    
-    setLoading(true)
-    setError(false)
-    fetchMonthlyKpi(url)
-      .then(r => { 
-        if (alive) onData((Array.isArray(r) && r.length) ? r : sampleMonthlyData) 
-      })
-      .catch(() => {
-        if (alive) setError(true)
-      })
-      .finally(() => { if (alive) setLoading(false) })
-    return () => { alive = false }
-  }, [locationId, selectedYear, selectedMonth]) */}
-
- {/* React.useEffect(() => {
-  let alive = true
-  if (!locationId) { setLoading(false); return }
-
-  setLoading(true)
-  setError(false)
-
-  fetchDentalMonthlyReport(locationId, selectedYear, selectedMonth)
-    .then(res => {
-      if (!alive) return
-
-      if (res?.status === "success" && res.calculated_data) {
-        const newRows = Array.isArray(res.calculated_data)
-          ? res.calculated_data
-          : [res.calculated_data]
-
-        onData(newRows)
-      } else {
-        setError(true)
-      }
-    })
-    .catch(() => {
-      if (alive) setError(true)
-    })
-    .finally(() => {
-      if (alive) setLoading(false)
-    })
-
-  return () => { alive = false }
-}, [locationId, selectedYear, selectedMonth]) */}
-
 
 React.useEffect(() => {
     let alive = true
@@ -172,68 +113,75 @@ React.useEffect(() => {
     setErrorMessage("")
 
     fetchDentalMonthlyReport(locationId, selectedYear, selectedMonth)
-      .then(res => {
-        if (!alive) return
+  .then(res => {
+    if (!alive) return
 
-         if (res?.status === "success") {
-          const csv = res.csv_data
-          const calc = res.calculated_data
-          console.log("NEW PATIENT GOAL FROM API:", csv.new_patient_goal)
+    if (res?.status === "success") {
+      const csv = res.csv_data
+      const calc = res.calculated_data
+      console.log("NEW PATIENT GOAL FROM API:", csv.new_patient_goal)
 
-        const allMonths = [
-    ...(res.last_6_months || []),
-    {
-      month: res.month,
-      year: res.year,
-      csv_data: res.csv_data,
-      calculated_data: res.calculated_data
-    }
-  ]
-  
-  const transformedRows = allMonths.map(item => {
-    const csv = item.csv_data || {}
-    const calc = item.calculated_data || {}
-  
-    return {
-      month: item.month,
-      active_patients: csv.active_patients,
-      new_patients: csv.new_patients,
-      new_patient_goal: csv.new_patient_goal,
-      lost_patients: csv.lost_patients,
-      production_general: csv.production_general,
-      production_ortho: csv.production_ortho,
-      collections_general: csv.collections_general,
-      collections_ortho: csv.collections_ortho,
-      scheduled_appointments: csv.scheduled_appts,
-      cancelled_appointments: csv.cancelled,
-      no_show_appointments: csv.no_shows,
-      lost_production: calc.lost_production,
-      lost_cancelled: csv.cancelled_production,
-      lost_noshow: csv.no_show_production,
-      treatment_proposed: csv.treatment_proposed,
-      treatment_accepted: csv.treatment_accepted,
-      collection_ratio: calc.collection_ratio
+      const allMonths = [
+        ...(res.last_6_months || []),
+        {
+          month: res.month,
+          year: res.year,
+          csv_data: res.csv_data,
+          calculated_data: res.calculated_data
+        }
+      ]
+
+      // ✅ Sort chronologically (oldest → newest)
+      const monthOrder = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+      allMonths.sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year
+        return monthOrder.indexOf(a.month) - monthOrder.indexOf(b.month)
+      })
+
+      const transformedRows = allMonths.map(item => {
+        const csv = item.csv_data || {}
+        const calc = item.calculated_data || {}
+
+        return {
+          month: item.month,
+          active_patients: csv.active_patients,
+          new_patients: csv.new_patients,
+          new_patient_goal: csv.new_patient_goal,
+          lost_patients: csv.lost_patients,
+          production_general: csv.production_general,
+          production_ortho: csv.production_ortho,
+          collections_general: csv.collections_general,
+          collections_ortho: csv.collections_ortho,
+          scheduled_appointments: csv.scheduled_appts,
+          cancelled_appointments: csv.cancelled,
+          no_show_appointments: csv.no_shows,
+          lost_production: calc.lost_production,
+          lost_cancelled: csv.cancelled_production,
+          lost_noshow: csv.no_show_production,
+          treatment_proposed: csv.treatment_proposed,
+          treatment_accepted: csv.treatment_accepted,
+          collection_ratio: calc.collection_ratio
+        }
+      })
+
+      onData(transformedRows)
+
+    } else {
+      if (res?.message && res.message.includes("No data found")) {
+        setErrorMessage(res.message)
+        onData([])
+      } else {
+        setError(true)
+      }
     }
   })
-  
-  onData(transformedRows)
-  
-        } else {
-          if (res?.message && res.message.includes("No data found")) {
-            setErrorMessage(res.message)
-            onData([])
-          } else {
-            setError(true)
-          }
-        } 
-      })
-      .catch((err) => {
-        console.error("Dashboard Error:", err)
-        if (alive) setError(true)
-      })
-      .finally(() => {
-        if (alive) setLoading(false)
-      })
+  .catch((err) => {
+    console.error("Dashboard Error:", err)
+    if (alive) setError(true)
+  })
+  .finally(() => {
+    if (alive) setLoading(false)
+  })
   
     return () => { alive = false }
   }, [locationId, selectedYear, selectedMonth])
