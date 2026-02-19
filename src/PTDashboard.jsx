@@ -26,7 +26,6 @@ function ReferralCard({ c }) {
     <div className="ref-card">
       <div className="ref-head">
         <div className="ref-name">{c.name}</div>
-        <div className={`ref-trend ${tClass}`}>{(c.trend>0?"+":"") + c.trend + "%"}</div>
       </div>
       <div className="ref-ytd">{c.ytd} <span className="ref-caption">2026 YTD</span></div>
       <div className="ref-spark" style={{ position: "relative" }}>
