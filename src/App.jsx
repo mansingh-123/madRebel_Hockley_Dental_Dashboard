@@ -160,7 +160,11 @@ React.useEffect(() => {
           lost_noshow: csv.no_show_production,
           treatment_proposed: csv.treatment_proposed,
           treatment_accepted: csv.treatment_accepted,
-          collection_ratio: calc.collection_ratio
+          collection_ratio: calc.collection_ratio,
+          cancellation_rate: calc.cancellation_rate,
+          no_show_rate: calc.no_show_rate,
+          fill_rate: calc.fill_rate,
+          treatment_acceptance: calc.treatment_acceptance
         }
       })
 
@@ -241,40 +245,28 @@ React.useEffect(() => {
   }
   function latestFromRow(r) {
     const latest = r || {}
-    const latestCollectionRatio = latest.collection_ratio || 0;
-    const latestCancellationRate = pctLocal(latest.cancelled_appointments || 0, latest.scheduled_appointments || 0)
-    const latestNoShowRate = pctLocal(latest.no_show_appointments || 0, latest.scheduled_appointments || 0)
-    const latestFillRate = (() => {
-      const scheduled = latest.scheduled_appointments || 0
-      const cancelled = latest.cancelled_appointments || 0
-      const noShow = latest.no_show_appointments || 0
-      const filled = scheduled - cancelled - noShow
-      return pctLocal(filled, scheduled)
-    })()
-    const latestNetGrowth = (latest.new_patients || 0) - (latest.lost_patients || 0)
-    const latestTreatmentAcc = pctLocal(latest.treatment_accepted || 0, latest.treatment_proposed || 0)
     return {
       activePatients: latest.active_patients || 0,
       newPatients: latest.new_patients || 0,
       newPatientGoal: latest.new_patient_goal || 200,
       lostPatients: latest.lost_patients || 0,
-      netPatientGrowth: latestNetGrowth,
+      netPatientGrowth: (latest.new_patients || 0) - (latest.lost_patients || 0),
       productionGeneral: latest.production_general || 0,
       productionOrtho: latest.production_ortho || 0,
       productionTotal: (latest.production_general || 0) + (latest.production_ortho || 0),
       collectionsGeneral: latest.collections_general || 0,
       collectionsOrtho: latest.collections_ortho || 0,
       collectionsTotal: (latest.collections_general || 0) + (latest.collections_ortho || 0),
-      collectionRatioPct: latestCollectionRatio,
-      cancellationRatePct: latestCancellationRate,
-      noShowRatePct: latestNoShowRate,
-      fillRatePct: latestFillRate,
+      collectionRatioPct: latest.collection_ratio || 0,
+      cancellationRatePct: latest.cancellation_rate || 0,
+      noShowRatePct: latest.no_show_rate || 0,
+      fillRatePct: latest.fill_rate || 0,
       lostProduction: latest.lost_production || 0,
       lostCancelled: latest.lost_cancelled || 0,
       lostNoShow: latest.lost_noshow || 0,
       scheduledAppointments: latest.scheduled_appointments || 0,
       noShowAppointments: latest.no_show_appointments || 0,
-      treatmentAcceptancePct: latestTreatmentAcc
+      treatmentAcceptancePct: latest.treatment_acceptance || 0
     }
   }
   const selectedIndex = months.findIndex(m => m === selectedMonth)
