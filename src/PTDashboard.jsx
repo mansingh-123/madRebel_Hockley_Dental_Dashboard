@@ -597,16 +597,6 @@ export default function PTDashboard({ locationId }) {
         <section className="panel-lg">
           <div className="panel-head">
             <div className="panel-title">Referrals by Clinic</div>
-            <div className="ref-legend">
-              <span>
-                <span className="year-dot year-2025"></span>
-                {prevYear}
-              </span>
-              <span>
-                <span className="year-dot year-2026"></span>
-                {currentYear}
-              </span>
-            </div>
           </div>
           <div className="referral-cards">
             {referralCards.map((c, i) => (
