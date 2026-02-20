@@ -659,7 +659,7 @@ React.useEffect(() => {
 
       <section className="insights">
         <div className="panel panel-insights">
-          <div className="panel-title">AI Insights — <span className="badge">Week of {weekOfLabel().split('Week of ')[1]}</span></div>
+          <div className="panel-title">AI Insights </div>
           <ul className="insights-list">
             {(aiInsights.length ? aiInsights : ((kpis.latest.aiInsights && kpis.latest.aiInsights.length) ? kpis.latest.aiInsights : mockInsights)).map((x, i) => {
               const [lead, rest] = splitLead(x)
@@ -673,7 +673,7 @@ React.useEffect(() => {
           </ul>
         </div>
         <div className="panel panel-actions">
-          <div className="panel-title">Action Items — <span className="badge success">This Week</span></div>
+          <div className="panel-title">Action Items</div>
           <ul className="actions-list">
             {(aiActions.length ? aiActions : ((kpis.latest.actionItems && kpis.latest.actionItems.length) ? kpis.latest.actionItems : mockActions)).map((x, i) => {
               const [lead, rest] = splitLead(x)

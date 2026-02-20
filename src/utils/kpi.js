@@ -22,19 +22,14 @@ export function computeKpis(rows) {
     collectionsTotal: rows.map(r => (r.collections_general || 0) + (r.collections_ortho || 0)),
     newPatients: rows.map(r => r.new_patients || 0),
     lostPatients: rows.map(r => r.lost_patients || 0), 
+    // Use pre-calculated values from API
     collectionRatioPct: rows.map(r => r.collection_ratio || 0),
-    cancellationRatePct: rows.map(r => pct(r.cancelled_appointments || 0, r.scheduled_appointments || 0)),
-    noShowRatePct: rows.map(r => pct(r.no_show_appointments || 0, r.scheduled_appointments || 0)),
-    fillRatePct: rows.map(r => {
-      const scheduled = r.scheduled_appointments || 0
-      const cancelled = r.cancelled_appointments || 0
-      const noShow = r.no_show_appointments || 0
-      const filled = scheduled - cancelled - noShow
-      return pct(filled, scheduled)
-    }),
+    cancellationRatePct: rows.map(r => r.cancellation_rate || 0),
+    noShowRatePct: rows.map(r => r.no_show_rate || 0),
+    fillRatePct: rows.map(r => r.fill_rate || 0),
+    treatmentAcceptancePct: rows.map(r => r.treatment_acceptance || 0),
     netPatientGrowth: rows.map(r => (r.new_patients || 0) - (r.lost_patients || 0)),
     newPatientGoal: rows.map(r => r.new_patient_goal || goalNewPatientsPerMonth),
-    treatmentAcceptancePct: rows.map(r => pct(r.treatment_accepted || 0, r.treatment_proposed || 0)),
     lostProduction: rows.map(r => r.lost_production || 0),
     lostCancelled: rows.map(r => r.lost_cancelled || 0),
     lostNoShow: rows.map(r => r.lost_noshow || 0),
@@ -44,46 +39,36 @@ export function computeKpis(rows) {
   }
 
   const latest = rows[rows.length - 1] || {} 
-  const latestCollectionRatio = latest.collection_ratio || 0
-  const latestCancellationRate = pct(latest.cancelled_appointments || 0, latest.scheduled_appointments || 0)
-  const latestNoShowRate = pct(latest.no_show_appointments || 0, latest.scheduled_appointments || 0)
-  const latestFillRate = (() => {
-    const scheduled = latest.scheduled_appointments || 0
-    const cancelled = latest.cancelled_appointments || 0
-    const noShow = latest.no_show_appointments || 0
-    const filled = scheduled - cancelled - noShow
-    return pct(filled, scheduled)
-  })()
-  const latestNetGrowth = (latest.new_patients || 0) - (latest.lost_patients || 0)
-  const latestTreatmentAcc = pct(latest.treatment_accepted || 0, latest.treatment_proposed || 0)
 
+  // Build latest summary directly from the row's pre-calculated fields
   const latestSummary = {
     activePatients: latest.active_patients || 0,
     newPatients: latest.new_patients || 0,
     newPatientGoal: latest.new_patient_goal || goalNewPatientsPerMonth,
     lostPatients: latest.lost_patients || 0,
-    netPatientGrowth: latestNetGrowth,
+    netPatientGrowth: (latest.new_patients || 0) - (latest.lost_patients || 0),
     productionGeneral: latest.production_general || 0,
     productionOrtho: latest.production_ortho || 0,
     productionTotal: (latest.production_general || 0) + (latest.production_ortho || 0),
     collectionsGeneral: latest.collections_general || 0,
     collectionsOrtho: latest.collections_ortho || 0,
     collectionsTotal: (latest.collections_general || 0) + (latest.collections_ortho || 0),
-    collectionRatioPct: latestCollectionRatio,
-    cancellationRatePct: latestCancellationRate,
-    noShowRatePct: latestNoShowRate,
-    fillRatePct: latestFillRate,
+    collectionRatioPct: latest.collection_ratio || 0,
+    cancellationRatePct: latest.cancellation_rate || 0,
+    noShowRatePct: latest.no_show_rate || 0,
+    fillRatePct: latest.fill_rate || 0,
     lostProduction: latest.lost_production || 0,
     lostCancelled: latest.lost_cancelled || 0,
     lostNoShow: latest.lost_noshow || 0,
     scheduledAppointments: latest.scheduled_appointments || 0,
     cancelledAppointments: latest.cancelled_appointments || 0,
     noShowAppointments: latest.no_show_appointments || 0,
-    treatmentAcceptancePct: latestTreatmentAcc,
+    treatmentAcceptancePct: latest.treatment_acceptance || 0,
+    // Keep fallback insights/actions (these are overridden by AI if available)
     aiInsights: [
       "New patients trending down vs prior month. Monitor recovery closely.",
-      `Net growth positive (+${latestNetGrowth}) but softening; review retention drivers.`,
-      `Collection ratio at ${latestCollectionRatio}%. AR appears healthy.`,
+      `Net growth positive (+${(latest.new_patients || 0) - (latest.lost_patients || 0)}) but softening; review retention drivers.`,
+      `Collection ratio at ${latest.collection_ratio || 0}%. AR appears healthy.`,
       "ORTHO holding near 30% of total production.",
       `$${Number(latest.lost_production || 0).toLocaleString()} lost to cancellations/no-shows.`
     ],
