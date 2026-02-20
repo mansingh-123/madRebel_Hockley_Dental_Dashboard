@@ -64,19 +64,6 @@ export function computeKpis(rows) {
     cancelledAppointments: latest.cancelled_appointments || 0,
     noShowAppointments: latest.no_show_appointments || 0,
     treatmentAcceptancePct: latest.treatment_acceptance || 0,
-    // Keep fallback insights/actions (these are overridden by AI if available)
-    aiInsights: [
-      "New patients trending down vs prior month. Monitor recovery closely.",
-      `Net growth positive (+${(latest.new_patients || 0) - (latest.lost_patients || 0)}) but softening; review retention drivers.`,
-      `Collection ratio at ${latest.collection_ratio || 0}%. AR appears healthy.`,
-      "ORTHO holding near 30% of total production.",
-      `$${Number(latest.lost_production || 0).toLocaleString()} lost to cancellations/no-shows.`
-    ],
-    actionItems: [
-      "Launch reactivation campaign targeting inactive patients this week.",
-      "Review no-show patterns; consider overbooking or card-on-file for high-risk slots.",
-      "Case presentation refresher; add financing options to scripts."
-    ]
   }
 
   return { series, latest: latestSummary }
