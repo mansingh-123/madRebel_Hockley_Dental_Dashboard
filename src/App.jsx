@@ -482,8 +482,9 @@ React.useEffect(() => {
           title="Collections"
           months={months}
           datasets={[
-            { label: "General", data: sortSeries(kpis.series.collectionsGeneral), color: "#22c55e" },
-            { label: "ORTHO", data: sortSeries(kpis.series.collectionsOrtho), color: "#f59e0b" }
+            { label: "General", data: kpis.series.collectionsGeneral, color: "#22c55e" },
+            { label: "ORTHO", data: kpis.series.collectionsOrtho, color: "#f59e0b" }
+
           ]}
           type="bar"
         />
@@ -491,8 +492,8 @@ React.useEffect(() => {
           title="New Patients vs Goal"
           months={months}
           datasets={[
-            { label: "New Patients", data: sortSeries(kpis.series.newPatients), color: "#3b82f6" },
-            { label: "Goal", data: sortSeries(kpis.series.newPatientGoal), color: "#cbd5e1" }
+            { label: "New Patients", data: kpis.series.newPatients, color: "#3b82f6" },
+            { label: "Goal", data: kpis.series.newPatientGoal, color: "#cbd5e1" }
           ]}
           type="line"
         />
@@ -500,7 +501,7 @@ React.useEffect(() => {
           title="Collection Ratio"
           months={months}
           datasets={[
-            { label: "Ratio %", data: sortSeries(kpis.series.collectionRatioPct), color: "#a855f7" }
+            { label: "Ratio %", data: kpis.series.collectionRatioPct, color: "#a855f7" }
           ]}
           type="line"
         />
@@ -613,7 +614,7 @@ React.useEffect(() => {
           title="Cancellation Rate"
           months={months}
           datasets={[
-            { label: "Cancelled %", data: sortSeries(kpis.series.cancellationRatePct), color: "#f59e0b" }
+            { label: "Cancelled %", data: kpis.series.cancellationRatePct, color: "#f59e0b" }
           ]}
           type="line"
         />
@@ -621,7 +622,7 @@ React.useEffect(() => {
           title="No-Show Rate"
           months={months}
           datasets={[
-            { label: "No-Show %", data: sortSeries(kpis.series.noShowRatePct), color: "#3b82f6" }
+            { label: "No-Show %", data: kpis.series.noShowRatePct, color: "#3b82f6" }
           ]}
           type="line"
         />
@@ -629,8 +630,8 @@ React.useEffect(() => {
           title="Net Patient Growth"
           months={months}
           datasets={[
-            { label: "Net", data: sortSeries(kpis.series.netPatientGrowth), color: "#22c55e" },
-            { label: "Goal", data: sortSeries(kpis.series.newPatientGoal), color: "#cbd5e1" }
+            { label: "Net", data: kpis.series.netPatientGrowth, color: "#22c55e" },
+            { label: "Goal", data: kpis.series.newPatientGoal, color: "#cbd5e1" }
           ]}
           type="line"
         />
@@ -638,7 +639,7 @@ React.useEffect(() => {
           title="Treatment Acceptance"
           months={months}
           datasets={[
-            { label: "Acceptance %", data: sortSeries(kpis.series.treatmentAcceptancePct), color: "#3b82f6" }
+            { label: "Acceptance %", data: kpis.series.treatmentAcceptancePct, color: "#3b82f6" }
           ]}
           type="line"
         />
@@ -646,7 +647,7 @@ React.useEffect(() => {
           title="Fill Rate"
           months={months}
           datasets={[
-            { label: "Fill Rate %", data: sortSeries(kpis.series.fillRatePct), color: "#22c55e" }
+            { label: "Fill Rate %", data: kpis.series.fillRatePct, color: "#22c55e" }
           ]}
           type="line"
         />
