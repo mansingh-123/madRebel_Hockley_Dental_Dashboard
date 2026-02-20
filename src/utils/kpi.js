@@ -4,7 +4,7 @@ function pct(numerator, denominator) {
   const n = Number(numerator || 0)
   const d = Number(denominator || 0)
   if (!d || d <= 0) return 0
-  return Math.round((n / d) * 100)
+  return (n / d) * 100  
 }
 
 export function monthsFromData(rows) {
