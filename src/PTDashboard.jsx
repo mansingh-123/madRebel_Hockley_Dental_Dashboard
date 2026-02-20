@@ -4,7 +4,7 @@ import ErrorState from "./components/ErrorState.jsx";
 import AiInsights from "./components/AiInsights.jsx";
 import { fetchPtDashboard, fetchPtData, generateAiInsights } from "./services/data.js";
 
-function ReferralCard({ c, prevYear }) {
+function ReferralCard({ c }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const tClass = c.trend > 0 ? "up" : c.trend < 0 ? "down" : "";
 
@@ -91,7 +91,7 @@ function ReferralCard({ c, prevYear }) {
         )}
       </div>
       <div className="ref-caption">
-        {prevYear} total: {c.last}
+        {c.prevYear ? `${c.prevYear} total: ${c.prevTotal}` : ''}
       </div>
     </div>
   );
@@ -151,29 +151,33 @@ export default function PTDashboard({ locationId, dataSource }) {
   }, [locationId]);
 
   useEffect(() => {
-    const cleanup = loadDashboard();
+  let alive = true;                
+  const cleanup = loadDashboard();
 
-    // Fetch AI Insights independently
-    setAiLoading(true);
-    setAiError(null);
-    generateAiInsights(locationId)
-      .then((res) => {
-        if (!alive) return;
-        if (res.status === "success" && res.ai_response) {
-          setAiData(res.ai_response);
-        } else {
-          setAiError(res.message || "Failed to generate insights");
-        }
-      })
-      .catch((err) => {
-        if (alive) setAiError("Network error connecting to AI service");
-      })
-      .finally(() => {
-        if (alive) setAiLoading(false);
-      });
+  // Fetch AI Insights independently
+  setAiLoading(true);
+  setAiError(null);
+  generateAiInsights(locationId)
+    .then((res) => {
+      if (!alive) return;
+      if (res.status === "success" && res.ai_response) {
+        setAiData(res.ai_response);
+      } else {
+        setAiError(res.message || "Failed to generate insights");
+      }
+    })
+    .catch((err) => {
+      if (alive) setAiError("Network error connecting to AI service");
+    })
+    .finally(() => {
+      if (alive) setAiLoading(false);
+    });
 
-    return cleanup;
-  }, [locationId, loadDashboard]);
+  return () => {                 
+    alive = false;
+    if (cleanup) cleanup();
+  };
+}, [locationId, loadDashboard]);
 
   const handleSync = async () => {
     if (!locationId) return;
@@ -381,52 +385,37 @@ export default function PTDashboard({ locationId, dataSource }) {
   };
 
   const referralCards = clinicList.map((clinicName) => {
-    // Find current year data (latest year) and previous year data
-    const currentYearData = data?.referrals_clinic?.find(
-      (r) => r.clinic === clinicName && r.year === currentYear
-    );
-    const prevYearData = data?.referrals_clinic?.find(
-      (r) => r.clinic === clinicName && r.year === prevYear
-    );
+  // Get all entries for this clinic, sorted by year descending
+  const clinicEntries = data?.referrals_clinic
+    ?.filter(r => r.clinic === clinicName)
+    .sort((a, b) => b.year - a.year) || [];
 
-    const ytd_count =
-      currentYearData?.ytd_count ??
-      currentYearData?.total ??
-      (data?.referrers?.filter((r) => r.clinic === clinicName).reduce((sum, r) => sum + r.referral_count, 0) ||
-        0);
+  const latestEntry = clinicEntries[0];        // newest year (e.g., 2026 or 2025)
+  const prevEntry = clinicEntries[1];          // previous year (e.g., 2025 or 2024)
 
-    const totalPrevYear = prevYearData?.total || 0;
-    const avgPrevYear = totalPrevYear / 12;
-    const trendPct = avgPrevYear ? Math.round(((ytd_count - avgPrevYear) / avgPrevYear) * 100) : 0;
+  const ytd_count = latestEntry?.ytd_count || 0;
+  const latestYear = latestEntry?.year || currentYear;
+  const prevYear = prevEntry?.year;
+  const prevTotal = prevEntry?.total || 0;
 
-    const monthKeys = [
-      "jan",
-      "feb",
-      "mar",
-      "apr",
-      "may",
-      "jun",
-      "jul",
-      "aug",
-      "sep",
-      "oct",
-      "nov",
-      "dec",
-    ];
-    const monthlyData = prevYearData?.monthly
-      ? monthKeys.map((k) => prevYearData.monthly[k] || 0)
-      : [];
+  // Use latest year's monthly data for sparkline (if available)
+  const monthlyData = latestEntry?.monthly ? Object.values(latestEntry.monthly) : [];
 
-    return {
-      name: clinicName,
-      ytd_count,
-      year: currentYear,
-      trend: trendPct,
-      color: getClinicColor(clinicName),
-      last: totalPrevYear,
-      sparkline: monthlyData,
-    };
-  });
+  // Optional trend (compare latest YTD to previous year's monthly average)
+  const avgPrevYear = prevTotal / 12;
+  const trendPct = avgPrevYear ? Math.round(((ytd_count - avgPrevYear) / avgPrevYear) * 100) : 0;
+
+  return {
+    name: clinicName,
+    ytd_count,
+    year: latestYear,
+    prevYear,
+    prevTotal,
+    trend: trendPct,
+    color: getClinicColor(clinicName),
+    sparkline: monthlyData,   // now uses current year's monthly data
+  };
+});
 
   const referrerRows = data?.referrers || [];
   const collectionData = data?.collections?.[0];
@@ -637,7 +626,7 @@ export default function PTDashboard({ locationId, dataSource }) {
           </div>
           <div className="referral-cards">
             {referralCards.map((c, i) => (
-              <ReferralCard key={i} c={c} prevYear={prevYear} />
+              <ReferralCard key={i} c={c} />
             ))}
           </div>
         </section>

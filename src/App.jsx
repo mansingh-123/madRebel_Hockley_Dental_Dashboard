@@ -24,6 +24,7 @@ function getOnboardedFromUrl() {
 export default function App({ locationId }) {
   const [rows, setRows] = useState(null)
   const [kpis, setKpis] = useState(null)
+  const [aiLoading, setAiLoading] = useState(false)
   const months = rows ? monthsFromData(rows) : []
   const monthOrder = [
   "Jan","Feb","Mar","Apr","May","Jun",
@@ -208,19 +209,22 @@ React.useEffect(() => {
     let alive = true
     if (!locationId) return
 
-    // Clear previous insights when changing month/year
-    setAiInsights([])
-    setAiActions([])
+      setAiInsights([])
+      setAiActions([])
+      setAiLoading(true)
 
-    generateAiInsights(locationId, selectedYear, selectedMonth)
-      .then(res => {
-        if (!alive || !res || !res.ai_response) return
-        const ai = res.ai_response || {}
-        if (Array.isArray(ai.insights)) setAiInsights(ai.insights)
-        if (Array.isArray(ai.action_items)) setAiActions(ai.action_items)
-      })
-      .catch(() => {})
-    return () => { alive = false }
+     generateAiInsights(locationId, selectedYear, selectedMonth)
+    .then(res => {
+      if (!alive || !res || !res.ai_response) return
+      const ai = res.ai_response || {}
+      if (Array.isArray(ai.insights)) setAiInsights(ai.insights)
+      if (Array.isArray(ai.action_items)) setAiActions(ai.action_items)
+    })
+    .catch(() => {})
+    .finally(() => {
+      if (alive) setAiLoading(false)
+    })
+  return () => { alive = false }
   }, [locationId, selectedYear, selectedMonth])
 
   if (error) {
@@ -287,19 +291,6 @@ React.useEffect(() => {
     if (!first) return 0
     return ((last - first) / first) * 100
   }
-
-  const mockInsights = [
-    "New patients trending down vs prior month — monitor recovery closely.",
-    `Net growth positive (+${Number(latestView.netPatientGrowth || 0)}) but softening — review retention drivers.`,
-    `Collection ratio at ${Number(latestView.collectionRatioPct || 0)}% — AR appears healthy.`,
-    "ORTHO holding near 30% of total production — steady.",
-    `$${Number(latestView.lostProduction || 0).toLocaleString()} lost to cancellations/no-shows — material impact.`
-  ]
-  const mockActions = [
-    "Launch reactivation campaign — target recent inactives.",
-    "Review no-show patterns — consider overbooking or card-on-file.",
-    "Case presentation refresher — add financing options."
-  ]
 
   function splitLead(text) {
     const idxDash = text.indexOf(" — ")
@@ -658,35 +649,55 @@ React.useEffect(() => {
       </section>
 
       <section className="insights">
-        <div className="panel panel-insights">
-          <div className="panel-title">AI Insights </div>
-          <ul className="insights-list">
-            {(aiInsights.length ? aiInsights : ((kpis.latest.aiInsights && kpis.latest.aiInsights.length) ? kpis.latest.aiInsights : mockInsights)).map((x, i) => {
-              const [lead, rest] = splitLead(x)
-              return (
-                <li key={i}>
-                  <span className="lead">{lead}</span>
-                  {rest ? <span className="rest"> {rest}</span> : null}
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-        <div className="panel panel-actions">
-          <div className="panel-title">Action Items</div>
-          <ul className="actions-list">
-            {(aiActions.length ? aiActions : ((kpis.latest.actionItems && kpis.latest.actionItems.length) ? kpis.latest.actionItems : mockActions)).map((x, i) => {
-              const [lead, rest] = splitLead(x)
-              return (
-                <li key={i}>
-                  <span className="lead">{lead}</span>
-                  {rest ? <span className="rest"> {rest}</span> : null}
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-      </section>
+  <div className="panel panel-insights">
+    <div className="panel-title">AI Insights</div>
+    {aiLoading ? (
+      <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
+        Loading insights...
+      </div>
+    ) : aiInsights.length > 0 ? (
+      <ul className="insights-list">
+        {aiInsights.map((x, i) => {
+          const [lead, rest] = splitLead(x)
+          return (
+            <li key={i}>
+              <span className="lead">{lead}</span>
+              {rest ? <span className="rest"> {rest}</span> : null}
+            </li>
+          )
+        })}
+      </ul>
+    ) : (
+      <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
+        No insights available for this period.
+      </div>
+    )}
+  </div>
+  <div className="panel panel-actions">
+    <div className="panel-title">Action Items</div>
+    {aiLoading ? (
+      <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
+        Loading actions...
+      </div>
+    ) : aiActions.length > 0 ? (
+      <ul className="actions-list">
+        {aiActions.map((x, i) => {
+          const [lead, rest] = splitLead(x)
+          return (
+            <li key={i}>
+              <span className="lead">{lead}</span>
+              {rest ? <span className="rest"> {rest}</span> : null}
+            </li>
+          )
+        })}
+      </ul>
+    ) : (
+      <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>
+        No action items for this period.
+      </div>
+    )}
+  </div>
+</section>
 
       {showUploadModal && (
         <div style={{
